@@ -5,7 +5,9 @@ on:
   push:
     branches: [main]
     paths:
-      - "OLT-MA5683T-Traffic-Live.zip"
+      - "OLT-MA5683T-EMU-Fan-Fixed.zip"
+      - "traffic-live.patch.gz.b64"
+      - ".github/workflows/build-exe.yml"
 
 permissions:
   contents: read
@@ -22,35 +24,44 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Extract project ZIP
+      - name: Extract baseline ZIP and apply live traffic patch
         shell: pwsh
         run: |
-          $preferred = Join-Path $env:GITHUB_WORKSPACE "OLT-MA5683T-Traffic-Live.zip"
-          if (!(Test-Path $preferred)) {
-            throw "Missing OLT-MA5683T-Traffic-Live.zip in repository root. Upload the updated source ZIP before building."
+          $zip = Join-Path $env:GITHUB_WORKSPACE "OLT-MA5683T-EMU-Fan-Fixed.zip"
+          if (!(Test-Path $zip)) {
+            throw "Missing OLT-MA5683T-EMU-Fan-Fixed.zip in repository root."
           }
-          $zip = $preferred
 
-          Write-Host "Using archive: $(Split-Path $zip -Leaf)"
-          $dest = Join-Path $env:RUNNER_TEMP "olt-build-kit"
+          $dest = Join-Path $env:GITHUB_WORKSPACE "build-source"
           if (Test-Path $dest) { Remove-Item -LiteralPath $dest -Recurse -Force }
           Expand-Archive -LiteralPath $zip -DestinationPath $dest -Force
 
-          $app = Get-ChildItem -LiteralPath $dest -Recurse -File -Filter "app.py" | Select-Object -First 1
-          if (!$app) {
-            Write-Host "Archive files found (first 100):"
-            Get-ChildItem -LiteralPath $dest -Recurse -File | Select-Object -First 100 -ExpandProperty FullName | ForEach-Object { Write-Host $_ }
-            throw "app.py was not found in the uploaded ZIP. This archive may not be the Python/Flask build kit."
+          $patchB64Path = Join-Path $env:GITHUB_WORKSPACE "traffic-live.patch.gz.b64"
+          if (!(Test-Path $patchB64Path)) {
+            throw "Missing compressed live traffic patch."
           }
+          $patchBytes = [Convert]::FromBase64String((Get-Content -LiteralPath $patchB64Path -Raw).Trim())
+          $gzipPath = Join-Path $env:RUNNER_TEMP "traffic-live.patch.gz"
+          [IO.File]::WriteAllBytes($gzipPath, $patchBytes)
 
-          $src = $app.Directory.FullName
-          foreach ($required in @("index.html", "services.json", "requirements.txt")) {
+          $env:PATCH_GZ = $gzipPath
+          $env:PATCH_OUT = Join-Path $env:RUNNER_TEMP "traffic-live.patch"
+          python -c "import os,gzip,pathlib; pathlib.Path(os.environ['PATCH_OUT']).write_bytes(gzip.decompress(pathlib.Path(os.environ['PATCH_GZ']).read_bytes()))"
+          if ($LASTEXITCODE -ne 0) { throw "Could not decompress live traffic patch." }
+
+          git -C $env:GITHUB_WORKSPACE apply --check --directory=build-source $env:PATCH_OUT
+          if ($LASTEXITCODE -ne 0) { throw "Live traffic patch check failed." }
+          git -C $env:GITHUB_WORKSPACE apply --directory=build-source $env:PATCH_OUT
+          if ($LASTEXITCODE -ne 0) { throw "Could not apply live traffic patch." }
+
+          $src = Join-Path $dest "OLT-MA5683T-Operator-Dashboard"
+          foreach ($required in @("app.py", "index.html", "services.json", "requirements.txt")) {
             if (!(Test-Path (Join-Path $src $required))) {
-              Write-Host "Files beside app.py:"
-              Get-ChildItem -LiteralPath $src -File | ForEach-Object { Write-Host $_.Name }
-              throw "Required file missing beside app.py: $required"
+              throw "Required source file missing after extraction: $required"
             }
           }
+          python -m py_compile (Join-Path $src "app.py")
+          if ($LASTEXITCODE -ne 0) { throw "Python syntax validation failed." }
           "OLT_SOURCE_DIR=$src" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
       - name: Install dependencies
@@ -69,6 +80,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: OLT-MA5683T-Panel-Windows
-          path: ${{ env.OLT_SOURCE_DIR }}\dist\OLT-MA5683T-Panel.exe
+          path: ${{ env.OLT_SOURCE_DIR }}\\dist\\OLT-MA5683T-Panel.exe
           if-no-files-found: error
           retention-days: 30
