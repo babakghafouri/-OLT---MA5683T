@@ -1,18 +1,27 @@
-# Huawei MA5683T Operator Panel — Windows EXE
+# Huawei MA5683T Operator Panel
 
-This repository is prepared to build a Windows executable through GitHub Actions.
+پنل فارسی اپراتور Huawei MA5683T، شامل Inventory، Resources، Uplink، وضعیت فن/دما و ثبت ONT.
 
-## Build the EXE
+## Build Windows EXE
 
-1. Download the **OLT-MA5683T-Windows-EXE-Build-Kit.zip** attachment from the ChatGPT conversation where this repository was configured.
-2. Upload that ZIP file to the **root** of this repository using **Add file → Upload files**. Keep its exact name:
-   `OLT-MA5683T-Windows-EXE-Build-Kit.zip`
-3. Open **Actions → Build Windows EXE → Run workflow**.
-4. When the workflow finishes successfully, open the run and download the artifact named `OLT-MA5683T-Panel-Windows`. It contains `OLT-MA5683T-Panel.exe`.
+1. فایل `OLT-MA5683T-Traffic-Live.zip` را از مکالمه ChatGPT دانلود کنید.
+2. آن را در ریشه همین مخزن با مسیر دقیق `OLT-MA5683T-Traffic-Live.zip` بارگذاری و Commit کنید.
+3. با push به شاخه `main`، Workflow ساخت ویندوز به‌صورت خودکار اجرا می‌شود. همچنین می‌توانید از Actions آن را دستی اجرا کنید.
+4. پس از موفقیت، از Artifact با نام `OLT-MA5683T-Panel-Windows` فایل اجرایی `OLT-MA5683T-Panel.exe` را دریافت کنید.
 
-The EXE runs a local web server and opens the panel in the browser at `http://127.0.0.1:8080`.
+## Live Interface Traffic
+
+نسخه Traffic Live شامل تب «ترافیک زنده Interface» برای چهار پورت GE شناخته‌شده روی کارت‌های H801GICF در Slot 8 و 9 است:
+- `0/8/0`
+- `0/8/1`
+- `0/9/0`
+- `0/9/1`
+
+داده با polling فقط‌خواندنی CLI از مسیر `interface giu 0/<slot>` و دستور `display port traffic <port>` جمع‌آوری می‌شود. نرخ Upstream/Downstream و نمودار تاریخچه نمایش داده می‌شوند. این قابلیت streaming telemetry نیست و باید با خروجی واقعی CLI همین دستگاه تأیید شود.
 
 ## Security
 
-- Do not commit OLT usernames/passwords, real device IPs, or other credentials.
-- The EXE has not been verified against a live OLT from this build environment.
+- از SSH به‌جای Telnet استفاده کنید، اگر OLT پشتیبانی می‌کند.
+- هرگز رمز عبور یا IP مدیریت واقعی را داخل مخزن Commit نکنید.
+- برنامه به‌صورت پیش‌فرض روی `127.0.0.1:8080` اجرا می‌شود.
+- موفقیت Build به‌تنهایی، صحت همه دستورات روی OLT واقعی را تضمین نمی‌کند.
