@@ -1,0 +1,62 @@
+name: Build Windows EXE
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Extract build kit
+        shell: pwsh
+        run: |
+          $zip = Join-Path $env:GITHUB_WORKSPACE "OLT-MA5683T-Windows-EXE-Build-Kit.zip"
+          if (!(Test-Path $zip)) {
+            throw "Missing OLT-MA5683T-Windows-EXE-Build-Kit.zip. Upload the build-kit ZIP to the repository root first."
+          }
+
+          $dest = Join-Path $env:RUNNER_TEMP "olt-build-kit"
+          Expand-Archive -LiteralPath $zip -DestinationPath $dest -Force
+          $app = Get-ChildItem -LiteralPath $dest -Recurse -Filter "app.py" | Select-Object -First 1
+          if (!$app) {
+            throw "app.py was not found in the ZIP archive."
+          }
+
+          $src = $app.Directory.FullName
+          foreach ($required in @("index.html", "services.json", "requirements.txt")) {
+            if (!(Test-Path (Join-Path $src $required))) {
+              throw "Required file missing from build kit: $required"
+            }
+          }
+          "OLT_SOURCE_DIR=$src" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r "$env:OLT_SOURCE_DIR\requirements.txt" "pyinstaller>=6.10"
+
+      - name: Build EXE
+        shell: pwsh
+        run: |
+          Set-Location $env:OLT_SOURCE_DIR
+          python -m PyInstaller --noconfirm --clean --onefile --name OLT-MA5683T-Panel --add-data "index.html;." --add-data "services.json;." --collect-all flask --collect-all paramiko --collect-all cryptography --collect-all bcrypt --collect-all nacl app.py
+
+      - name: Upload EXE artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: OLT-MA5683T-Panel-Windows
+          path: ${{ env.OLT_SOURCE_DIR }}\dist\OLT-MA5683T-Panel.exe
+          if-no-files-found: error
+          retention-days: 30
