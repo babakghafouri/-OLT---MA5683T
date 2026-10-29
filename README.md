@@ -1,10 +1,10 @@
 # Huawei MA5683T Operator Panel — Windows EXE
 
-This repository is currently being prepared for a Windows build.
+This repository is prepared to build a Windows executable through GitHub Actions.
 
 ## Build the EXE
 
-1. Download the [Windows EXE build kit](https://sandbox:/mnt/data/OLT-MA5683T-Windows-EXE-Build-Kit.zip) from the ChatGPT conversation.
+1. Download the **OLT-MA5683T-Windows-EXE-Build-Kit.zip** attachment from the ChatGPT conversation where this repository was configured.
 2. Upload that ZIP file to the **root** of this repository using **Add file → Upload files**. Keep its exact name:
    `OLT-MA5683T-Windows-EXE-Build-Kit.zip`
 3. Open **Actions → Build Windows EXE → Run workflow**.
