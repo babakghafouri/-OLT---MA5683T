@@ -4,6 +4,8 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+    paths:
+      - "OLT-MA5683T-Traffic-Live.zip"
 
 permissions:
   contents: read
@@ -24,26 +26,10 @@ jobs:
         shell: pwsh
         run: |
           $preferred = Join-Path $env:GITHUB_WORKSPACE "OLT-MA5683T-Traffic-Live.zip"
-          if (Test-Path $preferred) {
-            $zip = $preferred
-          } else {
-            $candidates = @(Get-ChildItem -LiteralPath $env:GITHUB_WORKSPACE -File -Filter "*.zip" |
-              Sort-Object Name)
-            if ($candidates.Count -eq 0) {
-              throw "No ZIP file found in the repository root. Upload OLT-MA5683T-Traffic-Live.zip to the repository root first."
-            }
-            if ($candidates.Count -gt 1) {
-              Write-Host "Multiple ZIP files found:"
-              $candidates | ForEach-Object { Write-Host " - $($_.Name)" }
-              $candidate = $candidates | Where-Object { $_.Name -eq "OLT-MA5683T-Traffic-Live.zip" } | Select-Object -First 1
-              if (!$candidate) {
-                throw "Multiple ZIP files found and no preferred project archive was identified."
-              }
-              $zip = $candidate.FullName
-            } else {
-              $zip = $candidates[0].FullName
-            }
+          if (!(Test-Path $preferred)) {
+            throw "Missing OLT-MA5683T-Traffic-Live.zip in repository root. Upload the updated source ZIP before building."
           }
+          $zip = $preferred
 
           Write-Host "Using archive: $(Split-Path $zip -Leaf)"
           $dest = Join-Path $env:RUNNER_TEMP "olt-build-kit"
