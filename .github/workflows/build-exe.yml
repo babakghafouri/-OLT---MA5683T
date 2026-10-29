@@ -23,19 +23,19 @@ jobs:
       - name: Extract project ZIP
         shell: pwsh
         run: |
-          $preferred = Join-Path $env:GITHUB_WORKSPACE "OLT-MA5683T-Windows-EXE-Build-Kit.zip"
+          $preferred = Join-Path $env:GITHUB_WORKSPACE "OLT-MA5683T-Traffic-Live.zip"
           if (Test-Path $preferred) {
             $zip = $preferred
           } else {
             $candidates = @(Get-ChildItem -LiteralPath $env:GITHUB_WORKSPACE -File -Filter "*.zip" |
               Sort-Object Name)
             if ($candidates.Count -eq 0) {
-              throw "No ZIP file found in the repository root. Upload the project ZIP first."
+              throw "No ZIP file found in the repository root. Upload OLT-MA5683T-Traffic-Live.zip to the repository root first."
             }
             if ($candidates.Count -gt 1) {
               Write-Host "Multiple ZIP files found:"
               $candidates | ForEach-Object { Write-Host " - $($_.Name)" }
-              $candidate = $candidates | Where-Object { $_.Name -eq "OLT-MA5683T-EMU-Fan-Fixed.zip" } | Select-Object -First 1
+              $candidate = $candidates | Where-Object { $_.Name -eq "OLT-MA5683T-Traffic-Live.zip" } | Select-Object -First 1
               if (!$candidate) {
                 throw "Multiple ZIP files found and no preferred project archive was identified."
               }
