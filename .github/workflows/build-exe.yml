@@ -18,25 +18,49 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Extract build kit
+      - name: Extract project ZIP
         shell: pwsh
         run: |
-          $zip = Join-Path $env:GITHUB_WORKSPACE "OLT-MA5683T-Windows-EXE-Build-Kit.zip"
-          if (!(Test-Path $zip)) {
-            throw "Missing OLT-MA5683T-Windows-EXE-Build-Kit.zip. Upload the build-kit ZIP to the repository root first."
+          $preferred = Join-Path $env:GITHUB_WORKSPACE "OLT-MA5683T-Windows-EXE-Build-Kit.zip"
+          if (Test-Path $preferred) {
+            $zip = $preferred
+          } else {
+            $candidates = @(Get-ChildItem -LiteralPath $env:GITHUB_WORKSPACE -File -Filter "*.zip" |
+              Sort-Object Name)
+            if ($candidates.Count -eq 0) {
+              throw "No ZIP file found in the repository root. Upload the project ZIP first."
+            }
+            if ($candidates.Count -gt 1) {
+              Write-Host "Multiple ZIP files found:"
+              $candidates | ForEach-Object { Write-Host " - $($_.Name)" }
+              $candidate = $candidates | Where-Object { $_.Name -eq "OLT-MA5683T-EMU-Fan-Fixed.zip" } | Select-Object -First 1
+              if (!$candidate) {
+                throw "Multiple ZIP files found and no preferred project archive was identified."
+              }
+              $zip = $candidate.FullName
+            } else {
+              $zip = $candidates[0].FullName
+            }
           }
 
+          Write-Host "Using archive: $(Split-Path $zip -Leaf)"
           $dest = Join-Path $env:RUNNER_TEMP "olt-build-kit"
+          if (Test-Path $dest) { Remove-Item -LiteralPath $dest -Recurse -Force }
           Expand-Archive -LiteralPath $zip -DestinationPath $dest -Force
-          $app = Get-ChildItem -LiteralPath $dest -Recurse -Filter "app.py" | Select-Object -First 1
+
+          $app = Get-ChildItem -LiteralPath $dest -Recurse -File -Filter "app.py" | Select-Object -First 1
           if (!$app) {
-            throw "app.py was not found in the ZIP archive."
+            Write-Host "Archive files found (first 100):"
+            Get-ChildItem -LiteralPath $dest -Recurse -File | Select-Object -First 100 -ExpandProperty FullName | ForEach-Object { Write-Host $_ }
+            throw "app.py was not found in the uploaded ZIP. This archive may not be the Python/Flask build kit."
           }
 
           $src = $app.Directory.FullName
           foreach ($required in @("index.html", "services.json", "requirements.txt")) {
             if (!(Test-Path (Join-Path $src $required))) {
-              throw "Required file missing from build kit: $required"
+              Write-Host "Files beside app.py:"
+              Get-ChildItem -LiteralPath $src -File | ForEach-Object { Write-Host $_.Name }
+              throw "Required file missing beside app.py: $required"
             }
           }
           "OLT_SOURCE_DIR=$src" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
