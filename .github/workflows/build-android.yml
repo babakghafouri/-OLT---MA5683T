@@ -28,7 +28,7 @@ jobs:
             echo "sdkmanager not found under ANDROID_HOME=$ANDROID_HOME"
             exit 1
           fi
-          yes | "$SDKMANAGER" --licenses >/dev/null
+          yes | "$SDKMANAGER" --licenses >/dev/null 2>&1 || true
           "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0"
       - uses: gradle/actions/setup-gradle@v4
         with:
