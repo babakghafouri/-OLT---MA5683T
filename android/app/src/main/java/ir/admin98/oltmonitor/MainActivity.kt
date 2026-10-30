@@ -381,7 +381,7 @@ private class OltSshClient(
             fan = Regex("FAN\\s+(normal|abnormal|failure|fault)", RegexOption.IGNORE_CASE)
                 .find(emuOut)?.groupValues?.get(1)?.lowercase(),
             uplink = Regex("0\\s+GE\\s+\\w+\\s+1\\s+[-\\w]+\\s+[-\\w]+\\s+[-\\w]+\\s+\\w+\\s+(active|inactive)\\s+(online|offline)", RegexOption.IGNORE_CASE)
-                .find(boardOut)?.let { "GE0 \${it.groupValues[2]}" }
+                .find(boardOut)?.let { "GE0 " + it.groupValues[2] }
         )
     }
 
