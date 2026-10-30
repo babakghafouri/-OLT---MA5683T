@@ -396,7 +396,7 @@ private class OltSshClient(
 
     private fun execute(command: String): String {
         val out = output ?: error("SSH output stream unavailable")
-        out.write((command + "\\n").toByteArray(Charsets.UTF_8))
+        out.write((command + "\n").toByteArray(Charsets.UTF_8))
         out.flush()
         return readUntilQuiet()
     }
