@@ -58,7 +58,8 @@ class MainActivity : Activity() {
     private lateinit var memText: TextView
     private lateinit var tempText: TextView
     private lateinit var fanText: TextView
-    private lateinit var uplinkText: TextView
+    private lateinit var uplink8Text: TextView
+    private lateinit var uplink9Text: TextView
     private lateinit var chart: TrafficChartView
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -140,7 +141,8 @@ class MainActivity : Activity() {
         tempText = metric(systemCard, "Temperature", "—", Color.rgb(232, 145, 48))
         val systemRow2 = row(systemCard)
         fanText = metric(systemRow2, "FAN", "—", Color.rgb(34, 160, 110))
-        uplinkText = metric(systemRow2, "Uplink GE 0", "—", blue)
+        uplink8Text = metric(systemRow2, "Uplink 0/8", "—", blue)
+        uplink9Text = metric(systemRow2, "Uplink 0/9", "—", cyan)
         root.addView(systemCard, matchWrap())
 
         root.addView(label("اطلاعات اتصال فقط در همین نشست استفاده می‌شود و رمز عبور ذخیره نمی‌شود.", 11, muted))
@@ -219,7 +221,8 @@ class MainActivity : Activity() {
         memText.text = m.memory?.let { "$it%" } ?: "—"
         tempText.text = m.temperature?.let { "$it °C" } ?: "—"
         fanText.text = m.fan ?: "نامشخص"
-        uplinkText.text = m.uplink ?: "نامشخص"
+        uplink8Text.text = m.uplink8 ?: "نامشخص"
+        uplink9Text.text = m.uplink9 ?: "نامشخص"
         chart.addSample(m.rxKbps ?: 0.0, m.txKbps ?: 0.0)
         statusText.text = "وضعیت: متصل · آخرین بروزرسانی " + java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date())
     }
@@ -323,7 +326,8 @@ private data class OltMetrics(
     val memory: Int? = null,
     val temperature: Int? = null,
     val fan: String? = null,
-    val uplink: String? = null
+    val uplink8: String? = null,
+    val uplink9: String? = null
 )
 
 private class OltSshClient(
@@ -367,7 +371,8 @@ private class OltSshClient(
         val memOut = execute("display resource occupancy mem")
         val tempOut = execute("display temperature $cpuSlot")
         val emuOut = execute("display emu 0")
-        val boardOut = execute("display board $frame/$slot")
+        val boardOut8 = execute("display board $frame/8")
+        val boardOut9 = execute("display board $frame/9")
 
         return OltMetrics(
             rxKbps = number(traffic, "received traffic of this port\\(kbits/s\\)"),
@@ -380,11 +385,18 @@ private class OltSshClient(
                 .find(tempOut)?.groupValues?.get(1)?.toIntOrNull(),
             fan = Regex("FAN\\s+(normal|abnormal|failure|fault)", RegexOption.IGNORE_CASE)
                 .find(emuOut)?.groupValues?.get(1)?.lowercase(),
-            uplink = Regex("0\\s+GE\\s+\\w+\\s+1\\s+[-\\w]+\\s+[-\\w]+\\s+[-\\w]+\\s+\\w+\\s+(active|inactive)\\s+(online|offline)", RegexOption.IGNORE_CASE)
-                .find(boardOut)?.let { "GE0 " + it.groupValues[2] }
+            uplink8 = linkSummary(boardOut8),
+            uplink9 = linkSummary(boardOut9)
         )
     }
 
+    private fun linkSummary(text: String): String? {
+        val matches = Regex("(?m)^\\s*(\\d+)\\s+GE\\s+\\S+\\s+\\d+\\s+\\S+\\s+\\S+\\s+\\S+\\s+\\S+\\s+\\S+\\s+(online|offline)", RegexOption.IGNORE_CASE)
+            .findAll(text)
+            .map { "GE" + it.groupValues[1] + " " + it.groupValues[2] }
+            .toList()
+        return matches.takeIf { it.isNotEmpty() }?.joinToString(" · ")
+    }
     private fun number(text: String, labelPattern: String): Double? {
         val regex = Regex("$labelPattern\\s*=\\s*([0-9]+(?:\\.[0-9]+)?)", RegexOption.IGNORE_CASE)
         return regex.find(text)?.groupValues?.get(1)?.toDoubleOrNull()
