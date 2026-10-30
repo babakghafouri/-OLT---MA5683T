@@ -12,3 +12,5 @@ Build from this directory with Android Studio or `gradle :app:assembleDebug`.
 The APK is built automatically by the GitHub Actions workflow `Build Android APK` on updates to this branch.
 
 This prototype accepts the SSH host key without pinning. Add host-key verification before production use. CLI prompt behavior may vary by firmware/account privilege; validate against the target MA5683T.
+
+Build workflow uses the runner's installed Android SDK and installs API 35 build components.
