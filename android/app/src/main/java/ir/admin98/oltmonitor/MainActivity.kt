@@ -184,14 +184,14 @@ class MainActivity : Activity() {
                         val result = ssh.readMetrics(frame, slot, port, cpuSlot)
                         main.post { render(result) }
                     } catch (e: Exception) {
-                        main.post { statusText.text = "خطای دریافت اطلاعات: \${e.message ?: "ارتباط قطع شد"}" }
+                        main.post { statusText.text = "خطای دریافت اطلاعات: " + (e.message ?: "ارتباط قطع شد") }
                     }
                 }, 0, interval.toLong(), TimeUnit.SECONDS)
             } catch (e: Exception) {
                 connected = false
                 main.post {
                     connectButton.isEnabled = true
-                    statusText.text = "اتصال ناموفق: \${e.message ?: "خطای SSH"}"
+                    statusText.text = "اتصال ناموفق: " + (e.message ?: "خطای SSH")
                 }
             }
         }
@@ -211,17 +211,17 @@ class MainActivity : Activity() {
     }
 
     private fun render(m: OltMetrics) {
-        rxText.text = "\${m.rxKbps?.fmt() ?: "—"} Kbit/s"
-        txText.text = "\${m.txKbps?.fmt() ?: "—"} Kbit/s"
-        rxPpsText.text = "\${m.rxPps?.fmt0() ?: "—"} pps"
-        txPpsText.text = "\${m.txPps?.fmt0() ?: "—"} pps"
+        rxText.text = (m.rxKbps?.fmt() ?: "—") + " Kbit/s"
+        txText.text = (m.txKbps?.fmt() ?: "—") + " Kbit/s"
+        rxPpsText.text = (m.rxPps?.fmt0() ?: "—") + " pps"
+        txPpsText.text = (m.txPps?.fmt0() ?: "—") + " pps"
         cpuText.text = m.cpu?.let { "$it%" } ?: "—"
         memText.text = m.memory?.let { "$it%" } ?: "—"
         tempText.text = m.temperature?.let { "$it °C" } ?: "—"
         fanText.text = m.fan ?: "نامشخص"
         uplinkText.text = m.uplink ?: "نامشخص"
         chart.addSample(m.rxKbps ?: 0.0, m.txKbps ?: 0.0)
-        statusText.text = "وضعیت: متصل · آخرین بروزرسانی \${java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date())}"
+        statusText.text = "وضعیت: متصل · آخرین بروزرسانی " + java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date())
     }
 
     private fun sectionTitle(text: String) = label(text, 16, ink, true).apply {
