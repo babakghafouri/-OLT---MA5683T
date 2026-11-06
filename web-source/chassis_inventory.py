@@ -48,7 +48,7 @@ def parse_board_ports(raw, slot):
         return []
     prefix = f"0/{int(slot)}/"
     found = set()
-    for match in re.finditer(r"(?<![\\d/])0/(\\d{1,2})/(\\d{1,2})(?![\\d/])", raw):
+    for match in re.finditer(r"(?<![\d/])0/(\d{1,2})/(\d{1,2})(?![\d/])", raw):
         if int(match.group(1)) == int(slot):
             found.add(prefix + match.group(2))
     return sorted(found, key=lambda value: int(value.rsplit("/", 1)[1]))
