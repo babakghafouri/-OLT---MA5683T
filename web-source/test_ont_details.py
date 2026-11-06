@@ -19,6 +19,7 @@ Port table has no colon
 ONT EquipmentID : HG8245H
 Description : Customer_01
 ONT distance(m) : 1250
+Temperature : 43(C)
 Last up time : 2026-11-06 10:20:30
 Last down time : 2026-11-05 22:10:00
 Last down cause : LOS
@@ -35,7 +36,7 @@ Match state : match
 Tx optical power(dBm) : 2.10
 OLT Rx ONT optical power(dBm) : -20.30
 OLT Tx ONT optical power(dBm) : 4.10
-Temperature(C) : 41
+Temperature(C) : 27
 Voltage(V) : 3.30
 Laser bias current(mA) : 10
 Module type : GPON
@@ -54,7 +55,8 @@ Date Code : 16-08-25
         self.assertEqual(result["rx_power_dbm"], "-15.42")
         self.assertEqual(result["tx_power_dbm"], "2.10")
         self.assertEqual(result["olt_rx_power_dbm"], "-20.30")
-        self.assertEqual(result["temperature_c"], "41")
+        self.assertEqual(result["temperature_c"], "27")
+        self.assertEqual(result["ont_temperature"], "43(C)")
         self.assertEqual(result["line_profile_id"], "12")
         self.assertEqual(result["line_profile_name"], "line-profile_12")
         self.assertEqual(result["service_profile_id"], "15")
