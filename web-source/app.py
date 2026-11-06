@@ -456,7 +456,7 @@ def do_verify(f, s, p, ont_id):
         m = re.search(rx, info, re.I)
         return m.group(1) if m else ""
 
-    details = parse_ont_details(info, optical)
+    details = parse_ont_details(info, optical, sps)
     return {
         "run_state": pick(r"Run state\s*:\s*(\S+)"),
         "config_state": pick(r"Config state\s*:\s*(\S+)"),
