@@ -307,6 +307,13 @@ main{max-width:none;margin-right:228px;padding:24px 26px 65px;margin-left:0}
 @media(max-width:850px){.ont-detail-columns{grid-template-columns:1fr}}
 @media(max-width:600px){.ont-detail-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.ont-detail-properties{grid-template-columns:1fr}.ont-detail-hero h1{font-size:17px}}
 
+
+.ont-detail-warning{border:1px solid #e6b85c;background:#fff8e8;color:#76551a;border-radius:11px;padding:12px 14px;margin:0 0 14px;font-size:12px;line-height:1.9}
+.ont-service-port-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.ont-service-port{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px}
+.ont-service-port h3{font-size:12px;margin:0 0 9px}
+.ont-service-port .ont-detail-properties{grid-template-columns:repeat(2,minmax(0,1fr))}
+
 </style>
 </head>
 <body>
@@ -832,9 +839,32 @@ function ontPropertiesCard(title, items, emptyText) {
   }
   return card;
 }
+function ontServicePortsCard(rows) {
+  const card=h("article",{class:"ont-detail-card"},h("h2",{text:"سرویس‌های متصل و VLAN / Service-Port"}));
+  if(!rows || !rows.length) {
+    card.append(h("div",{class:"empty",text:"در خروجی فعلی Service-Port قابل استخراجی گزارش نشده است."}));
+    return card;
+  }
+  const list=h("div",{class:"ont-service-port-list"});
+  rows.forEach((row,index)=>{
+    const item=h("section",{class:"ont-service-port"},
+      h("h3",{text:"Service-Port #"+(row.index||index+1)+" · "+(row.state||"نامشخص")}));
+    const grid=h("div",{class:"ont-detail-properties"});
+    [
+      ["VLAN ID",row.vlan_id],["VLAN Attribute",row.vlan_attr],
+      ["نوع پورت",row.port_type],["F/S/P",row.fsp],
+      ["ONT ID",row.ont_id],["GEM ID",row.gem_id],
+      ["Flow Type",row.flow_type],["Flow Parameter",row.flow_parameter],
+      ["RX",row.rx],["TX",row.tx]
+    ].forEach(([label,value])=>grid.append(ontProperty(label,value,/id|fsp/i.test(label))));
+    item.append(grid);list.append(item);
+  });
+  card.append(list);return card;
+}
 function renderOntDetail(fsp, ont, v) {
   const target=$("#ontDetailContent"); target.textContent="";
   const d=v.details||{};
+  const timingValid=d.connection_timing_valid===true;
   const title=h("div",{class:"ont-detail-hero"},
     h("div",{},
       h("h1",{text:`مشترک ONT ${ont.id} · پورت ${fsp}`}),
@@ -847,33 +877,51 @@ function renderOntDetail(fsp, ont, v) {
     ontMetric("توان دریافتی سمت OLT",d.olt_rx_power_dbm,"dBm"),
     ontMetric("توان ارسالی سمت OLT",d.olt_tx_power_dbm,"dBm"),
     ontMetric("فاصله تا OLT",d.distance_m,"m"),
-    ontMetric("مدت اتصال فعلی",d.online_duration));
+    ontMetric("مدت اتصال",timingValid?d.online_duration:"غیرقابل اتکا"),
+    ontMetric("مصرف حافظه ONT",d.memory_occupation),
+    ontMetric("مصرف CPU ONT",d.cpu_occupation),
+    ontMetric("دمای ONT",d.temperature_c,"°C"));
+  const timingWarning=timingValid?null:h("div",{class:"ont-detail-warning",text:
+    "هشدار اعتبار زمان: OLT مقدار Last Up را با تاریخ 2000-01-01 گزارش کرده و مدت اتصال 9807 روز با آن هم‌خوانیِ یک شمارنده Epoch را دارد. این دو مقدار به‌عنوان سابقه واقعی اتصال نمایش داده نمی‌شوند. مقدار خام برای عیب‌یابی در خروجی CLI حفظ شده است."});
   const identity=ontPropertiesCard("مشخصات و پروفایل مشترک",[
-    {label:"مدل ONT",value:d.model},
-    {label:"نام / توضیحات",value:d.description},
+    {label:"مدل / شرح ثبت‌شده در OLT",value:d.model||d.description},
+    {label:"Description",value:d.description},
     {label:"Serial Number",value:d.serial_number||ont.sn},
+    {label:"روش احراز هویت",value:d.authentic_type},
+    {label:"حالت مدیریت",value:d.management_mode},
+    {label:"DBA Type",value:d.dba_type},
     {label:"Line Profile ID",value:d.line_profile_id},
+    {label:"Line Profile Name",value:d.line_profile_name},
     {label:"Service Profile ID",value:d.service_profile_id},
-    {label:"Control State",value:d.control_state},
+    {label:"Service Profile Name",value:d.service_profile_name},
+    {label:"Control Flag",value:d.control_state},
+    {label:"Isolation State",value:d.isolation_state},
     {label:"موقعیت F/S/P",value:fsp}
   ]);
   const history=ontPropertiesCard("سوابق اتصال و وضعیت",[
-    {label:"آخرین اتصال · Last Up",value:d.last_up_time},
+    {label:"آخرین اتصال · Last Up",value:timingValid?d.last_up_time:"نامعتبر / Epoch سال 2000"},
     {label:"آخرین قطع · Last Down",value:d.last_down_time},
     {label:"علت آخرین قطع",value:d.last_down_cause},
-    {label:"مدت اتصال",value:d.online_duration},
+    {label:"مدت اتصال گزارش‌شده",value:timingValid?d.online_duration:"نامعتبر؛ مقدار خام در CLI"},
     {label:"وضعیت اجرا",value:v.run_state},
     {label:"وضعیت پیکربندی",value:v.config_state},
-    {label:"وضعیت تطبیق",value:v.match_state}
+    {label:"وضعیت تطبیق",value:v.match_state},
+    {label:"وضعیت نرم‌افزار",value:d.software_work_mode},
+    {label:"آدرس IP ONT",value:d.ont_ip}
   ]);
+  const infoSkip=new Set(["lastuptime","lastdowntime","lastdowncause","ontonlineduration","ontsn","sn","ontlineprofileid","ontlineprofilename","ontsrvprofileid","ontsrvprofilename","runstate","configstate","matchstate","controlflag","dbatype","ontdistancem","memoryoccupation","cpuoccupation","temperature","temperaturec","description"]);
+  const extraInfo=(d.info_properties||[]).filter(x=>!infoSkip.has(x.key));
   const raw=h("article",{class:"ont-detail-card"},
     h("h2",{text:"خروجی‌های خام CLI"}),
     h("details",{class:"ont-detail-raw"},h("summary",{text:"اطلاعات ONT · display ont info"}),h("pre",{class:"code",text:v.info||"بدون خروجی"})),
     h("details",{class:"ont-detail-raw"},h("summary",{text:"اطلاعات نوری · display ont optical-info"}),h("pre",{class:"code",text:v.optical||"بدون خروجی"})),
     h("details",{class:"ont-detail-raw"},h("summary",{text:"سرویس‌های متصل · display service-port"}),h("pre",{class:"code",text:v.service_ports||"بدون خروجی"})));
-  target.append(title,metrics,h("div",{class:"ont-detail-columns"},identity,history),
-    ontPropertiesCard("فیلدهای عمومی گزارش‌شده در اطلاعات ONT",d.info_properties,"هیچ فیلد ساختاریافته‌ای در خروجی اطلاعات ONT شناسایی نشد."),
-    ontPropertiesCard("فیلدهای عمومی گزارش‌شده در اطلاعات نوری",d.optical_properties,"هیچ فیلد ساختاریافته‌ای در خروجی نوری شناسایی نشد."),
+  target.append(title);
+  if(timingWarning)target.append(timingWarning);
+  target.append(metrics,h("div",{class:"ont-detail-columns"},identity,history),
+    ontPropertiesCard("مشخصات ماژول و آستانه‌های نوری",d.optical_properties,"اطلاعات ماژول نوری در خروجی OLT گزارش نشده است."),
+    ontServicePortsCard(d.service_port_rows),
+    ontPropertiesCard("سایر اطلاعات فنی گزارش‌شده توسط OLT",extraInfo,"فیلد فنی اضافه‌ای در خروجی اطلاعات ONT شناسایی نشد."),
     raw);
 }
 async function loadOntDetail() {
