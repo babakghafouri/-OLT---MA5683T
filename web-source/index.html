@@ -866,9 +866,6 @@ function renderOntDetail(fsp, ont, v) {
     {label:"وضعیت پیکربندی",value:v.config_state},
     {label:"وضعیت تطبیق",value:v.match_state}
   ]);
-  const optical=h("article",{class:"ont-detail-card"},
-    h("h2",{text:"مشخصات ماژول نوری"}),
-    ontPropertiesCard("",d.optical_properties,"اطلاعات نوری تکمیلی در خروجی OLT گزارش نشده است").children);
   const raw=h("article",{class:"ont-detail-card"},
     h("h2",{text:"خروجی‌های خام CLI"}),
     h("details",{class:"ont-detail-raw"},h("summary",{text:"اطلاعات ONT · display ont info"}),h("pre",{class:"code",text:v.info||"بدون خروجی"})),
