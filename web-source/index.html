@@ -282,6 +282,31 @@ main{max-width:none;margin-right:228px;padding:24px 26px 65px;margin-left:0}
 @media(max-width:1050px){.traffic-main{grid-template-columns:1fr}.traffic-port-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.traffic-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.traffic-port-grid,.traffic-kpis{grid-template-columns:1fr}.traffic-current-grid{grid-template-columns:1fr 1fr}.traffic-toolbar{align-items:flex-start}}
 
+
+/* ---------- Dedicated ONT subscriber details ---------- */
+.ont-detail-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.ont-detail-head .left{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ont-detail-hero{background:linear-gradient(115deg,#07364c,#0b6676);color:#f3fbff;border-radius:15px;padding:20px 22px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;box-shadow:0 8px 24px #06394a22}
+.ont-detail-hero h1{font-size:21px;margin:0 0 5px}.ont-detail-hero .sn{font:600 14px var(--mono);direction:ltr;text-align:left;color:#d4eef5;overflow-wrap:anywhere}
+.ont-detail-hero .meta{color:#c4e0e8;font-size:11px}.ont-detail-hero .status{display:flex;gap:8px;flex-wrap:wrap}
+.ont-detail-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:14px}
+.ont-detail-metric{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:15px;min-width:0;box-shadow:var(--shadow)}
+.ont-detail-metric small{display:block;color:var(--mute);font-size:11px}
+.ont-detail-metric strong{display:block;font:700 21px/1.5 var(--mono);direction:ltr;text-align:right;overflow-wrap:anywhere;color:var(--ink)}
+.ont-detail-metric .source{font-size:10px;color:var(--mute)}
+.ont-detail-columns{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.ont-detail-card{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:17px;min-width:0;box-shadow:var(--shadow)}
+.ont-detail-card h2{font-size:14px;margin:0 0 12px}
+.ont-detail-properties{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.ont-detail-property{background:var(--sunk);border:1px solid var(--line);border-radius:9px;padding:10px;min-width:0}
+.ont-detail-property small{display:block;color:var(--mute);font-size:10px;margin-bottom:3px}
+.ont-detail-property strong{display:block;font-size:12px;overflow-wrap:anywhere;unicode-bidi:plaintext}
+.ont-detail-property .ltr{font-family:var(--mono)}
+.ont-detail-card .empty{padding:14px;font-size:11px}
+.ont-detail-raw{margin-top:10px}
+@media(max-width:850px){.ont-detail-columns{grid-template-columns:1fr}}
+@media(max-width:600px){.ont-detail-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.ont-detail-properties{grid-template-columns:1fr}.ont-detail-hero h1{font-size:17px}}
+
 </style>
 </head>
 <body>
@@ -435,6 +460,18 @@ main{max-width:none;margin-right:228px;padding:24px 26px 65px;margin-left:0}
     <div class="rack" id="rack"></div>
     <div id="portBody"></div>
   </section>
+
+  <!-- صفحه اختصاصی جزئیات مشترک: فقط داده‌های گزارش‌شده توسط OLT -->
+  <section id="viewOntDetail" hidden>
+    <div class="ont-detail-head">
+      <div class="left">
+        <button class="btn" id="ontDetailBack" type="button">→ بازگشت به فهرست ONTها</button>
+        <span class="muted small" id="ontDetailPath">جزئیات مشترک</span>
+      </div>
+      <button class="btn primary" id="ontDetailRefresh" type="button">⟳ بازخوانی از OLT</button>
+    </div>
+    <div id="ontDetailContent"></div>
+  </section>
 </main>
 
 <dialog id="dlg"><div class="dlg" id="dlgBody"></div></dialog>
@@ -442,7 +479,7 @@ main{max-width:none;margin-right:228px;padding:24px 26px 65px;margin-left:0}
 
 <script>
 const $ = s => document.querySelector(s);
-const S = {services: [], selected: null, ports: [], active: null, onts: [], free: null, busy: false, connected:false};
+const S = {services: [], selected: null, ports: [], active: null, onts: [], free: null, busy: false, connected:false, currentOnt:null};
 
 function h(tag, props = {}, ...kids) {
   const e = document.createElement(tag);
@@ -496,6 +533,7 @@ function setTab(name) {
   document.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === name));
   $("#viewConnect").hidden = name !== "connect";
   $("#viewNew").hidden = name !== "new"; $("#viewPorts").hidden = name !== "ports";
+  $("#viewOntDetail").hidden = true;
   for (const section of ["dashboard","inventory","resource","alarms","traffic"])
     $("#view" + section[0].toUpperCase() + section.slice(1)).hidden = name !== section;
   if (name !== "traffic") stopTrafficMonitoring();
@@ -765,14 +803,100 @@ function renderPort(fsp, r) {
   fill();
 }
 async function openDetail(fsp, o) {
-  const [f, s, p] = fsp.split("/");
-  dialog(h("h3", {text: `ONT ${o.id} روی ${fsp}`}), h("div", {class: "mono ltr muted", text: o.sn}),
-    h("div", {class: "row", style: "align-items:center"}, h("span", {class: "spin"}), "در حال خواندن از OLT…"));
-  try {
-    const v = await api(`/api/verify?fsp=${encodeURIComponent(fsp)}&ont_id=${o.id}`);
-    dialog(h("h3", {text: `ONT ${o.id} روی ${fsp}`}), h("div", {class: "mono ltr muted", text: o.sn}), verifyBlock(v), h("div", {class: "actions"}, closeBtn()));
-  } catch (e) { dialog(h("h3", {text: "خواندن اطلاعات ممکن نشد"}), h("div", {class: "err", text: e.message}), h("div", {class: "actions"}, closeBtn())); }
+  S.currentOnt = {fsp, ont:o};
+  $("#viewPorts").hidden = true;
+  $("#viewOntDetail").hidden = false;
+  await loadOntDetail();
 }
+
+function ontProperty(label, value, ltr=false) {
+  const shown = value == null || String(value).trim()==="" ? "در خروجی OLT گزارش نشده" : String(value);
+  return h("div",{class:"ont-detail-property"},
+    h("small",{text:label}),
+    h("strong",{class:ltr?"ltr":"" ,text:shown}));
+}
+function ontMetric(label, value, unit="") {
+  const has = value != null && String(value).trim() !== "";
+  return h("article",{class:"ont-detail-metric"},
+    h("small",{text:label}),
+    h("strong",{text:has?String(value)+(unit?" "+unit:""):"—"}),
+    h("span",{class:"source",text:has?"دریافت‌شده از OLT":"در خروجی CLI موجود نیست"}));
+}
+function ontPropertiesCard(title, items, emptyText) {
+  const card=h("article",{class:"ont-detail-card"},h("h2",{text:title}));
+  if(!items || !items.length) card.append(h("div",{class:"empty",text:emptyText||"این اطلاعات در خروجی فعلی گزارش نشده است."}));
+  else {
+    const grid=h("div",{class:"ont-detail-properties"});
+    items.forEach(x=>grid.append(ontProperty(x.label,x.value,/serial|sn|id|version|ip|mac/i.test(x.label))));
+    card.append(grid);
+  }
+  return card;
+}
+function renderOntDetail(fsp, ont, v) {
+  const target=$("#ontDetailContent"); target.textContent="";
+  const d=v.details||{};
+  const title=h("div",{class:"ont-detail-hero"},
+    h("div",{},
+      h("h1",{text:`مشترک ONT ${ont.id} · پورت ${fsp}`}),
+      h("div",{class:"sn",text:d.serial_number||ont.sn||"Serial نامشخص"}),
+      h("div",{class:"meta",text:"آخرین دریافت: "+(v.sampled_at?new Date(v.sampled_at*1000).toLocaleString("fa-IR"):"زمان ثبت نشده")})),
+    h("div",{class:"status"},badge("Run",v.run_state),badge("Config",v.config_state),badge("Match",v.match_state)));
+  const metrics=h("div",{class:"ont-detail-kpis"},
+    ontMetric("توان دریافتی ONT · Rx",d.rx_power_dbm||v.rx_power,"dBm"),
+    ontMetric("توان ارسالی ONT · Tx",d.tx_power_dbm,"dBm"),
+    ontMetric("توان دریافتی سمت OLT",d.olt_rx_power_dbm,"dBm"),
+    ontMetric("توان ارسالی سمت OLT",d.olt_tx_power_dbm,"dBm"),
+    ontMetric("فاصله تا OLT",d.distance_m,"m"),
+    ontMetric("مدت اتصال فعلی",d.online_duration));
+  const identity=ontPropertiesCard("مشخصات و پروفایل مشترک",[
+    {label:"مدل ONT",value:d.model},
+    {label:"نام / توضیحات",value:d.description},
+    {label:"Serial Number",value:d.serial_number||ont.sn},
+    {label:"Line Profile ID",value:d.line_profile_id},
+    {label:"Service Profile ID",value:d.service_profile_id},
+    {label:"Control State",value:d.control_state},
+    {label:"موقعیت F/S/P",value:fsp}
+  ]);
+  const history=ontPropertiesCard("سوابق اتصال و وضعیت",[
+    {label:"آخرین اتصال · Last Up",value:d.last_up_time},
+    {label:"آخرین قطع · Last Down",value:d.last_down_time},
+    {label:"علت آخرین قطع",value:d.last_down_cause},
+    {label:"مدت اتصال",value:d.online_duration},
+    {label:"وضعیت اجرا",value:v.run_state},
+    {label:"وضعیت پیکربندی",value:v.config_state},
+    {label:"وضعیت تطبیق",value:v.match_state}
+  ]);
+  const optical=h("article",{class:"ont-detail-card"},
+    h("h2",{text:"مشخصات ماژول نوری"}),
+    ontPropertiesCard("",d.optical_properties,"اطلاعات نوری تکمیلی در خروجی OLT گزارش نشده است").children);
+  const raw=h("article",{class:"ont-detail-card"},
+    h("h2",{text:"خروجی‌های خام CLI"}),
+    h("details",{class:"ont-detail-raw"},h("summary",{text:"اطلاعات ONT · display ont info"}),h("pre",{class:"code",text:v.info||"بدون خروجی"})),
+    h("details",{class:"ont-detail-raw"},h("summary",{text:"اطلاعات نوری · display ont optical-info"}),h("pre",{class:"code",text:v.optical||"بدون خروجی"})),
+    h("details",{class:"ont-detail-raw"},h("summary",{text:"سرویس‌های متصل · display service-port"}),h("pre",{class:"code",text:v.service_ports||"بدون خروجی"})));
+  target.append(title,metrics,h("div",{class:"ont-detail-columns"},identity,history),
+    ontPropertiesCard("فیلدهای عمومی گزارش‌شده در اطلاعات ONT",d.info_properties,"هیچ فیلد ساختاریافته‌ای در خروجی اطلاعات ONT شناسایی نشد."),
+    ontPropertiesCard("فیلدهای عمومی گزارش‌شده در اطلاعات نوری",d.optical_properties,"هیچ فیلد ساختاریافته‌ای در خروجی نوری شناسایی نشد."),
+    raw);
+}
+async function loadOntDetail() {
+  if(!S.currentOnt)return;
+  const {fsp,ont}=S.currentOnt, target=$("#ontDetailContent");
+  $("#ontDetailPath").textContent=fsp+" · ONT ID "+ont.id;
+  target.textContent="";
+  target.append(h("div",{class:"empty"},h("span",{class:"spin"})," در حال دریافت جزئیات واقعی از OLT…"));
+  $("#ontDetailRefresh").disabled=true;
+  try {
+    const v=await api(`/api/verify?fsp=${encodeURIComponent(fsp)}&ont_id=${ont.id}`);
+    renderOntDetail(fsp,ont,v);
+  } catch(e) {
+    target.textContent="";
+    target.append(h("div",{class:"err",text:"دریافت اطلاعات مشترک ناموفق بود: "+e.message}),
+      h("button",{class:"btn",type:"button",onclick:loadOntDetail},"تلاش مجدد"));
+  } finally { $("#ontDetailRefresh").disabled=false; }
+}
+$("#ontDetailBack").onclick=()=>{ $("#viewOntDetail").hidden=true; $("#viewPorts").hidden=false; };
+$("#ontDetailRefresh").onclick=loadOntDetail;
 
 
 /* ---------- داشبورد خواندنی اپراتور ---------- */
