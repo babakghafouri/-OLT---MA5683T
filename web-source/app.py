@@ -215,32 +215,120 @@ class Conn:
             self.run("quit")
 
 
-# ---------- وضعیت سراسری (یک اتصال، یک ادمین) ----------
-LOCK = threading.RLock()
-CONN = None
+# ---------- مدیریت چند OLT و نشست‌های مستقل ----------
+from contextvars import ContextVar
+import uuid
+
+DEVICE_FILE = Path(os.environ.get("OLT_DEVICE_FILE", str(BASE / "devices.json")))
+_ACTIVE_CONN = ContextVar("active_olt_connection", default=None)
+_MANAGER_LOCK = threading.RLock()
+
+
+class ConnectionManager:
+    def __init__(self):
+        self.connections = {}
+        self.locks = {}
+
+    def get(self, device_id):
+        with _MANAGER_LOCK:
+            return self.connections.get(device_id)
+
+    def add(self, device_id, conn):
+        with _MANAGER_LOCK:
+            previous = self.connections.get(device_id)
+            if previous:
+                previous.close()
+            self.connections[device_id] = conn
+            self.locks.setdefault(device_id, threading.RLock())
+
+    def remove(self, device_id):
+        with _MANAGER_LOCK:
+            conn = self.connections.pop(device_id, None)
+            self.locks.pop(device_id, None)
+        if conn:
+            conn.close()
+
+    def lock_for(self, device_id):
+        with _MANAGER_LOCK:
+            return self.locks.setdefault(device_id, threading.RLock())
+
+
+MANAGER = ConnectionManager()
+
+
+class ActiveConnectionProxy:
+    def _conn_or_none(self):
+        conn = _ACTIVE_CONN.get()
+        if conn is not None:
+            return conn
+        device_id = session.get("active_olt_id")
+        return MANAGER.get(device_id) if device_id else None
+
+    def _conn(self):
+        conn = self._conn_or_none()
+        if conn is None:
+            raise OLTError("ابتدا به یک OLT متصل شوید")
+        return conn
+
+    def __bool__(self):
+        return self._conn_or_none() is not None
+
+    def __getattr__(self, name):
+        return getattr(self._conn(), name)
+
+
+CONN = ActiveConnectionProxy()
+
+
+def load_devices():
+    if not DEVICE_FILE.exists():
+        return []
+    try:
+        data = json.loads(DEVICE_FILE.read_text("utf-8"))
+        return data if isinstance(data, list) else []
+    except (OSError, ValueError):
+        return []
+
+
+def save_devices(items):
+    DEVICE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    tmp = DEVICE_FILE.with_suffix(".tmp")
+    tmp.write_text(json.dumps(items, ensure_ascii=False, indent=2), "utf-8")
+    os.chmod(tmp, 0o600)
+    tmp.replace(DEVICE_FILE)
+    os.chmod(DEVICE_FILE, 0o600)
+
+
+def public_device(item):
+    return {k: item.get(k) for k in ("id", "name", "host", "port", "proto", "credential_mode", "notes")}
 
 
 def need_conn(fn):
     @wraps(fn)
     def wrapper(*a, **k):
-        with LOCK:
-            if CONN is None:
-                return jsonify(error="ابتدا به OLT وصل شوید"), 400
-            return fn(*a, **k)
-
+        device_id = session.get("active_olt_id")
+        conn = MANAGER.get(device_id) if device_id else None
+        if conn is None:
+            return jsonify(error="ابتدا به یک OLT متصل شوید"), 400
+        with MANAGER.lock_for(device_id):
+            token = _ACTIVE_CONN.set(conn)
+            try:
+                return fn(*a, **k)
+            finally:
+                _ACTIVE_CONN.reset(token)
     return wrapper
 
 
 @app.errorhandler(Exception)
 def on_error(e):
-    global CONN
     from werkzeug.exceptions import HTTPException
     if isinstance(e, HTTPException):
         return e
     print(f"[ERROR] {request.path}: {e.__class__.__name__}: {e}", flush=True)
-    if isinstance(e, OLTError) and CONN is not None and "قطع" in str(e):
-        CONN.close()
-        CONN = None
+    device_id = session.get("active_olt_id")
+    conn = MANAGER.get(device_id) if device_id else None
+    if isinstance(e, OLTError) and conn is not None and "قطع" in str(e):
+        MANAGER.remove(device_id)
     code = 400 if isinstance(e, (OLTError, ValueError)) else 500
     return jsonify(error=str(e) or e.__class__.__name__), code
 
@@ -392,12 +480,68 @@ def api_login():
     return jsonify(error="رمز اشتباه است"), 401
 
 
+@app.get("/api/devices")
+def api_devices():
+    connected = set(MANAGER.connections)
+    return jsonify(devices=[{**public_device(x), "connected": x.get("id") in connected}
+                            for x in load_devices()])
+
+
+@app.post("/api/devices")
+def api_add_device():
+    d = request.get_json(force=True) or {}
+    name, host = str(d.get("name", "")).strip(), str(d.get("host", "")).strip()
+    proto = str(d.get("proto", "ssh")).lower()
+    if not name:
+        raise ValueError("نام دستگاه الزامی است")
+    if not HOST_RE.match(host):
+        raise ValueError("آدرس OLT نامعتبر است")
+    if proto not in ("ssh", "telnet"):
+        raise ValueError("پروتکل نامعتبر است")
+    port = int(d.get("port") or (22 if proto == "ssh" else 23))
+    if not 1 <= port <= 65535:
+        raise ValueError("پورت نامعتبر است")
+    mode = d.get("credential_mode", "session")
+    if mode not in ("session", "encrypted"):
+        raise ValueError("حالت نگهداری رمز نامعتبر است")
+    item = {"id": uuid.uuid4().hex, "name": name, "host": host, "port": port,
+            "proto": proto, "credential_mode": mode, "notes": str(d.get("notes", ""))[:500]}
+    if mode == "encrypted":
+        key = os.environ.get("OLT_CREDENTIALS_KEY", "")
+        if not key:
+            raise ValueError("برای ذخیره رمز، OLT_CREDENTIALS_KEY را در محیط سرویس تنظیم کنید")
+        from cryptography.fernet import Fernet
+        password = str(d.get("password", ""))
+        if not password:
+            raise ValueError("برای ذخیره رمز، رمز عبور الزامی است")
+        item["password_enc"] = Fernet(key.encode()).encrypt(password.encode()).decode()
+        item["username"] = str(d.get("user", "")).strip()
+    items = load_devices()
+    items.append(item)
+    save_devices(items)
+    return jsonify(ok=True, device=public_device(item))
+
+
+@app.delete("/api/devices/<device_id>")
+def api_delete_device(device_id):
+    items = load_devices()
+    kept = [x for x in items if x.get("id") != device_id]
+    if len(kept) == len(items):
+        return jsonify(error="دستگاه پیدا نشد"), 404
+    save_devices(kept)
+    MANAGER.remove(device_id)
+    if session.get("active_olt_id") == device_id:
+        session.pop("active_olt_id", None)
+    return jsonify(ok=True)
+
+
 @app.get("/api/status")
 def api_status():
-    with LOCK:
-        if CONN is None:
-            return jsonify(connected=False)
-        return jsonify(connected=True, host=CONN.host, proto=CONN.proto, prompt=CONN.prompt)
+    device_id = session.get("active_olt_id")
+    conn = MANAGER.get(device_id) if device_id else None
+    return jsonify(connected=conn is not None,
+                   **({"host": conn.host, "proto": conn.proto, "prompt": conn.prompt, "device_id": device_id} if conn else {}),
+                   devices=[public_device(x) for x in load_devices()])
 
 
 @app.get("/api/services")
@@ -407,36 +551,44 @@ def api_services():
 
 @app.post("/api/connect")
 def api_connect():
-    global CONN
     d = request.get_json(force=True) or {}
-    proto = d.get("proto", "ssh")
-    if proto not in ("ssh", "telnet"):
-        raise ValueError("پروتکل نامعتبر")
-    host = str(d.get("host", "")).strip()
-    if not HOST_RE.match(host):
-        raise ValueError("آدرس OLT نامعتبر است")
-    port = int(d.get("port") or (22 if proto == "ssh" else 23))
-    with LOCK:
-        if CONN:
-            CONN.close()
-            CONN = None
-        c = Conn(host, port, proto, str(d.get("user", "")).strip(), str(d.get("password", "")))
-        try:
-            c.open()
-        except Exception:
-            c.close()
-            raise
-        CONN = c
-    return jsonify(ok=True, prompt=c.prompt)
+    device_id = str(d.get("device_id", "")).strip()
+    saved = next((x for x in load_devices() if x.get("id") == device_id), None) if device_id else None
+    if saved:
+        host, proto, port = saved["host"], saved["proto"], int(saved["port"])
+        user = str(d.get("user") or saved.get("username") or "").strip()
+        password = str(d.get("password", ""))
+        if saved.get("credential_mode") == "encrypted" and not password:
+            key = os.environ.get("OLT_CREDENTIALS_KEY", "")
+            if not key:
+                raise ValueError("کلید رمزنگاری تنظیم نشده است")
+            from cryptography.fernet import Fernet
+            password = Fernet(key.encode()).decrypt(saved["password_enc"].encode()).decode()
+    else:
+        host, proto = str(d.get("host", "")).strip(), str(d.get("proto", "ssh")).lower()
+        port = int(d.get("port") or (22 if proto == "ssh" else 23))
+        user, password = str(d.get("user", "")).strip(), str(d.get("password", ""))
+    if proto not in ("ssh", "telnet") or not HOST_RE.match(host) or not 1 <= port <= 65535:
+        raise ValueError("مشخصات اتصال OLT نامعتبر است")
+    c = Conn(host, port, proto, user, password)
+    try:
+        c.open()
+    except Exception:
+        c.close()
+        raise
+    if not device_id:
+        device_id = "temporary-" + uuid.uuid4().hex
+    MANAGER.add(device_id, c)
+    session["active_olt_id"] = device_id
+    return jsonify(ok=True, prompt=c.prompt, device_id=device_id)
 
 
 @app.post("/api/disconnect")
 def api_disconnect():
-    global CONN
-    with LOCK:
-        if CONN:
-            CONN.close()
-            CONN = None
+    device_id = session.get("active_olt_id")
+    if device_id:
+        MANAGER.remove(device_id)
+    session.pop("active_olt_id", None)
     return jsonify(ok=True)
 
 
