@@ -48,5 +48,10 @@ class ChassisInventoryTests(unittest.TestCase):
         from chassis_inventory import parse_board_ports
         self.assertEqual(parse_board_ports("Port 0: Up\\nPort 1: Down", 0), [])
 
+    def test_h807gpbd_has_eight_gpon_ports(self):
+        from chassis_inventory import gpon_port_count
+        self.assertEqual(gpon_port_count("H807GPBD"), 8)
+        self.assertIsNone(gpon_port_count("H801SCUN"))
+
 if __name__ == "__main__":
     unittest.main()
