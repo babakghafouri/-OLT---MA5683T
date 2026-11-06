@@ -33,7 +33,7 @@ def parse_chassis_inventory(raw):
                 unparsed.append(line)
             continue
         # Explicit empty rows only; don't infer emptiness from missing rows.
-        empty = re.match(r"^\s*(\d{1,2})\s+(empty|absent|none|not-installed)\s*$", line, re.I)
+        empty = re.match(r"^\s*(\d{1,2})(?:\s+(?:empty|absent|none|not-installed))?\s*$", line, re.I)
         if empty and int(empty.group(1)) < SLOT_COUNT:
             n = int(empty.group(1))
             slots[n]["state"] = "empty"
