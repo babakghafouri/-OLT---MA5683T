@@ -1038,11 +1038,49 @@ function physicalChassis(boards,live) {
  const frame=h("div",{class:"dash-chassis"}),rack=h("div",{class:"dash-slots"});
  const entries=parseMA5683TBoards(boards);
  const detail=h("div",{class:"ops-note",style:"margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:10px",text:"برای مشاهده جزئیات، یک اسلات را انتخاب کنید."});
+ let selection=0;
  function selectSlot(i,b,known){
+   const seq=++selection;
+   detail.textContent="";
    const label=b?.model|| (known?"خالی":"نامشخص");
    const state=b?.status|| (known?"کارت نصب نشده":"اطلاعاتی از دستگاه دریافت نشده");
-   detail.textContent="اسلات "+i+" | "+label+" | وضعیت: "+state+" | "+(live?"داده دستگاه":"نمونه غیرزنده")+". اطلاعات پورت‌ها و ONTها باید جداگانه از OLT خوانده شوند.";
+   detail.append(h("div",{style:"font-weight:700;margin-bottom:8px",text:`اسلات ${i} | ${label} | وضعیت: ${state} | ${live?"داده دستگاه":"نمونه غیرزنده"}`}));
    rack.querySelectorAll(".dash-slot").forEach((node,n)=>{node.style.outline=n===i?"2px solid var(--accent)":"";node.setAttribute("aria-pressed",String(n===i));});
+   const isGpon=/GPBD/i.test(b?.model||"");
+   if(!isGpon){
+     detail.append(h("p",{text:known?"این اسلات کارت GPON نصب‌شده ندارد؛ خواندن ONT برای آن فعال نیست.":"اطلاعات نصب کارت نامشخص است؛ ابتدا Inventory را از OLT بخوانید."}));
+     return;
+   }
+   detail.append(h("p",{text:live?"برای دریافت وضعیت واقعی ONTها روی پورت موردنظر کلیک کنید. فقط همان پورت خوانده می‌شود.":"در حالت پیش‌نمایش، دریافت اطلاعات پورت و ONT غیرفعال است."}));
+   const ports=h("div",{style:"display:flex;flex-wrap:wrap;gap:7px;margin:10px 0"});
+   const result=h("div",{class:"dash-empty",text:"پورتی انتخاب نشده است."});
+   for(let p=0;p<8;p++){
+     const fsp=`0/${i}/${p}`;
+     const button=h("button",{class:"btn small",type:"button",text:fsp});
+     button.disabled=!live;
+     button.onclick=async()=>{
+       const token=++selection;
+       ports.querySelectorAll("button").forEach(x=>{x.setAttribute("aria-pressed",String(x===button));});
+       result.textContent="در حال خواندن "+fsp+" از OLT…";
+       try{
+         const response=await api("/api/port?fsp="+encodeURIComponent(fsp));
+         if(token!==selection)return;
+         const onts=Array.isArray(response.onts)?response.onts:[];
+         const online=onts.filter(o=>String(o.run).toLowerCase()==="online").length;
+         result.textContent="";
+         result.append(h("strong",{text:`پورت ${fsp} | ONT ثبت‌شده: ${onts.length} | آنلاین: ${online} | آفلاین/سایر: ${onts.length-online}`}));
+         if(!onts.length){result.append(h("p",{text:"ONT ثبت‌شده‌ای در خروجی این پورت شناسایی نشد."}));return;}
+         const table=h("table",{style:"width:100%;margin-top:10px;text-align:right;direction:rtl"});
+         table.append(h("thead",{},h("tr",{},...["ONT ID","Serial Number","Run State","Config State","Match State"].map(x=>h("th",{text:x})))));
+         const tbody=h("tbody");
+         onts.forEach(o=>tbody.append(h("tr",{},...["id","sn","run","config","match"].map(k=>h("td",{text:String(o[k]??"—")})))));
+         table.append(tbody);
+         result.append(h("div",{style:"overflow-x:auto"},table));
+       }catch(e){if(token===selection){result.textContent="";result.append(h("span",{class:"err",text:"خطا در خواندن پورت "+fsp+": "+e.message}));}}
+     };
+     ports.append(button);
+   }
+   detail.append(ports,result);
  }
  for(let i=0;i<=12;i++){
   const b=entries.get(i),model=b?.model||"",state=b?.status||"",installed=!!model,known=entries.has(i);
