@@ -1,0 +1,38 @@
+name: Validate web application
+
+on:
+  push:
+    branches: [web-multi-olt]
+    paths:
+      - "web-source/**"
+      - ".github/workflows/test-web.yml"
+  pull_request:
+    branches: [web-multi-olt]
+    paths:
+      - "web-source/**"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r web-source/requirements.txt
+      - name: Compile Python
+        run: python -m py_compile web-source/app.py
+      - name: Validate JavaScript syntax
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path("web-source/index.html").read_text(encoding="utf-8")
+          scripts = re.findall(r"<script>(.*?)</script>", html, re.S)
+          assert scripts, "No inline script found"
+          Path("/tmp/app.js").write_text("\n".join(scripts), encoding="utf-8")
+          PY
+          node --check /tmp/app.js
