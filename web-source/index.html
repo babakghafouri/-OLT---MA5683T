@@ -880,7 +880,7 @@ function renderOntDetail(fsp, ont, v) {
     ontMetric("مدت اتصال",timingValid?d.online_duration:"غیرقابل اتکا"),
     ontMetric("مصرف حافظه ONT",d.memory_occupation),
     ontMetric("مصرف CPU ONT",d.cpu_occupation),
-    ontMetric("دمای ONT",d.temperature_c,"°C"));
+    ontMetric("دمای بدنه ONT",d.ont_temperature));
   const timingWarning=timingValid?null:h("div",{class:"ont-detail-warning",text:
     "هشدار اعتبار زمان: "+(d.connection_timing_note||"زمان اتصال از خروجی فعلی قابل تأیید نیست.")+" مقدار خام برای عیب‌یابی در خروجی CLI حفظ شده است."});
   const identity=ontPropertiesCard("مشخصات و پروفایل مشترک",[
