@@ -886,6 +886,7 @@ def api_board_detail(slot):
     detail = CONN.run(f"display board 0/{slot}", timeout=25)
     port_state = ""
     port_info = []
+    ports = []
     port_error = ""
     entered_gpon = False
     try:
