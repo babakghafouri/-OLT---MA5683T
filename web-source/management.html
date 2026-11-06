@@ -201,7 +201,7 @@ async function refresh() {
   } finally {$("#refreshBtn").disabled=false;}
 }
 function openEditor(device=null) {
-  editingId=device?.id||null;$("#deviceForm").reset();
+  editingId=device?.id||null;$("#deviceForm").reset();$("#dPort").dataset.touched="";
   $("#editorTitle").textContent=device?"ویرایش دستگاه OLT":"افزودن OLT جدید";
   $("#dName").value=device?.name||"";$("#dHost").value=device?.host||"";
   $("#dProto").value=device?.proto||"ssh";$("#dPort").value=device?.port||(device?.proto==="telnet"?23:22);
