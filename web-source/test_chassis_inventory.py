@@ -38,5 +38,15 @@ class ChassisInventoryTests(unittest.TestCase):
     def test_explicit_empty(self):
         result = parse_chassis_inventory("3 empty")
         self.assertEqual(result["slots"][3]["state"], "empty")
+    def test_parse_board_ports_only_explicit_matching_slot(self):
+        from chassis_inventory import parse_board_ports
+        raw = "Port 0/0/0 is up\\nPort 0/0/1 is down\\nPort 0/1/0 is up\\n"
+        self.assertEqual(parse_board_ports(raw, 0), ["0/0/0", "0/0/1"])
+        self.assertEqual(parse_board_ports(raw, 1), ["0/1/0"])
+
+    def test_parse_board_ports_no_inference(self):
+        from chassis_inventory import parse_board_ports
+        self.assertEqual(parse_board_ports("Port 0: Up\\nPort 1: Down", 0), [])
+
 if __name__ == "__main__":
     unittest.main()

@@ -858,7 +858,7 @@ if __name__ == "__main__":
 
 
 # ---------- MA5683T live chassis map (read-only) ----------
-from chassis_inventory import parse_chassis_inventory
+from chassis_inventory import parse_chassis_inventory, parse_board_ports
 
 @app.get("/api/chassis-inventory")
 @need_conn
@@ -871,3 +871,26 @@ def api_chassis_inventory():
     return jsonify(model="MA5683T", device_id=session.get("active_olt_id"),
                    slots=inventory["slots"], recognized=inventory["recognized"],
                    unparsed=inventory["unparsed"], sampled_at=int(time.time()))
+
+@app.get("/api/board/<int:slot>")
+@need_conn
+def api_board_detail(slot):
+    """Read-only detail for an installed chassis board and its reported PON ports."""
+    if not 0 <= slot <= 12:
+        raise ValueError("شماره اسلات نامعتبر است")
+    inventory_raw = CONN.run("display board 0", timeout=25)
+    inventory = parse_chassis_inventory(inventory_raw)
+    board = inventory["slots"][slot]
+    if board["state"] != "installed":
+        raise ValueError("در این اسلات کارت نصب‌شده‌ای از خروجی زنده OLT شناسایی نشد")
+    detail = CONN.run(f"display board 0/{slot}", timeout=25)
+    port_state = ""
+    port_error = ""
+    try:
+        port_state = CONN.run(f"display port state 0/{slot}", timeout=25)
+    except OLTError as exc:
+        port_error = str(exc)
+    ports = parse_board_ports(port_state, slot)
+    return jsonify(slot=slot, board=board, detail=detail[:30000],
+                   port_state=port_state[:30000], ports=ports,
+                   port_error=port_error, sampled_at=int(time.time()))
