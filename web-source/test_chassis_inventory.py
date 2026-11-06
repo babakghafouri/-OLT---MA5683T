@@ -12,6 +12,29 @@ class ChassisInventoryTests(unittest.TestCase):
         result = parse_chassis_inventory("Error: Unknown command")
         self.assertEqual(result["recognized"], 0)
         self.assertTrue(all(s["state"] == "unknown" for s in result["slots"]))
+    def test_real_ma5683t_inventory(self):
+        raw = """SlotID  BoardName  Status          SubType0 SubType1    Online/Offline
+  0       H807GPBD   Normal
+  1       H807GPBD   Normal
+  2
+  3
+  4
+  5
+  6       H801SCUN   Standby_normal
+  7       H801SCUN   Active_normal
+  8       H801GICF   Normal
+  9       H801GICF   Normal
+  10
+  11
+  12
+"""
+        result = parse_chassis_inventory(raw)
+        self.assertEqual(result["recognized"], 13)
+        self.assertEqual([s["slot"] for s in result["slots"] if s["state"] == "installed"], [0, 1, 6, 7, 8, 9])
+        self.assertEqual([s["slot"] for s in result["slots"] if s["state"] == "empty"], [2, 3, 4, 5, 10, 11, 12])
+        self.assertEqual(result["slots"][6]["status"], "Standby_normal")
+        self.assertEqual(result["slots"][7]["status"], "Active_normal")
+
     def test_explicit_empty(self):
         result = parse_chassis_inventory("3 empty")
         self.assertEqual(result["slots"][3]["state"], "empty")
