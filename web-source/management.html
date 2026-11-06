@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>مدیریت شبکه | Huawei OLT</title>
+<style>
+:root{--bg:#edf3f9;--panel:#fff;--soft:#f5f8fd;--ink:#112d47;--muted:#75879a;--line:#dfe9f3;--accent:#05a5b0;--ok:#16a36d;--bad:#e43c52;--warn:#e9a72a;--nav:#07364c;--shadow:0 7px 25px rgba(18,55,90,.055);font-family:"Vazirmatn","Segoe UI",Tahoma,Arial,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-size:13px;line-height:1.8}button,input,select,textarea{font:inherit;color:inherit}button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}[hidden]{display:none!important}
+.side{position:fixed;inset:0 0 0 auto;width:228px;background:linear-gradient(170deg,#07364c,#082d43 55%,#052435);color:#e9f6fa;display:flex;flex-direction:column;z-index:5;box-shadow:-4px 0 20px #00334816}
+.brand{padding:25px 18px;border-bottom:1px solid #ffffff20}.brand strong{display:block;font-size:16px}.brand small{color:#a3becb;font-size:10px}
+.side-label{padding:22px 18px 7px;color:#83adbc;font-size:10px}.side-link{margin:4px 10px;padding:11px 14px;border-radius:9px;color:#e5f4f8;text-decoration:none;display:flex;align-items:center;gap:10px}.side-link.active{background:#0b5268;border-right:4px solid #15ded0;font-weight:700}.side-link:hover{background:#ffffff12}.side-foot{margin-top:auto;padding:18px;color:#b7d2dc;border-top:1px solid #ffffff20;font-size:11px}
+.top{margin-right:228px;min-height:76px;background:var(--panel);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 26px;box-shadow:0 1px 8px #0a3f5f06}
+.top-title strong{display:block;font-size:17px}.top-title small{color:var(--muted)}.top-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+main{margin-right:228px;padding:24px 26px 60px;max-width:1600px}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:9px;padding:8px 14px;min-height:37px}.btn:hover{border-color:#91a8ba}.btn.primary{background:var(--accent);border-color:var(--accent);color:white;font-weight:700}.btn.danger{color:var(--bad);border-color:#f1c8ce}.btn.small{min-height:31px;padding:4px 10px;font-size:12px}
+.hero{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;margin-bottom:17px}.hero h1{font-size:21px;margin:0}.hero p{margin:3px 0 0;color:var(--muted);font-size:12px}.hero-actions{display:flex;gap:8px;flex-wrap:wrap}
+.notice{display:none;padding:10px 14px;border:1px solid var(--line);background:var(--panel);border-radius:10px;margin-bottom:14px}.notice.show{display:block}.notice.error{border-color:#f1c8ce;background:#fff5f6;color:#a92b40}.notice.success{border-color:#b9e5d3;background:#f0fbf6;color:#08794d}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:16px}.kpi{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:16px;box-shadow:var(--shadow);min-width:0}.kpi small{display:block;color:var(--muted);font-size:11px}.kpi strong{display:block;font:800 26px/1.5 "Segoe UI",Tahoma,sans-serif;direction:ltr;text-align:right}.kpi span{font-size:10px;color:var(--muted)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow);margin-bottom:15px;min-width:0}.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}.panel-head h2{font-size:15px;margin:0}.panel-head p{font-size:11px;color:var(--muted);margin:3px 0 0}
+.devices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.device{border:1px solid var(--line);background:var(--soft);border-radius:12px;padding:15px;min-width:0}.device-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.device-name{font-weight:800;font-size:15px;overflow-wrap:anywhere}.device-host{font:600 12px "Consolas",monospace;direction:ltr;text-align:right;color:#3e5c75;overflow-wrap:anywhere;margin-top:3px}.pills{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}.pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;border-radius:30px;padding:3px 9px;font-size:10px;color:#456078}.dot{width:8px;height:8px;border-radius:50%;background:#a8b7c4;display:inline-block}.dot.ok{background:var(--ok)}.dot.warn{background:var(--warn)}.dot.bad{background:var(--bad)}
+.device-notes{font-size:11px;color:var(--muted);min-height:20px;overflow-wrap:anywhere}.device-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:13px}.empty{border:1px dashed var(--line);background:var(--soft);border-radius:11px;padding:30px;text-align:center;color:var(--muted);grid-column:1/-1}.empty strong{display:block;color:var(--ink);font-size:14px;margin-bottom:4px}
+.grid-bottom{display:grid;grid-template-columns:1.2fr .8fr;gap:15px}.info-list{display:grid;gap:10px}.info-row{display:flex;gap:10px;align-items:flex-start;padding:10px;border-radius:9px;background:var(--soft);font-size:11px}.info-row b{min-width:120px}
+dialog{border:1px solid var(--line);border-radius:15px;padding:0;background:var(--panel);color:var(--ink);width:min(560px,calc(100vw - 24px));max-height:calc(100vh - 30px);box-shadow:0 24px 70px #05152255}dialog::backdrop{background:#071b2c88}.dlg{padding:20px;display:grid;gap:13px}.dlg h2{font-size:16px;margin:0}.dlg p{font-size:11px;color:var(--muted);margin:-7px 0 0}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.field{display:grid;gap:4px;min-width:0}.field.full{grid-column:1/-1}.field label{font-size:11px;color:var(--muted)}.field input,.field select,.field textarea{width:100%;border:1px solid var(--line);background:var(--soft);border-radius:8px;padding:8px 10px;min-height:38px}.field textarea{min-height:70px;resize:vertical}.ltr{direction:ltr;text-align:left;font-family:Consolas,monospace}.form-actions{display:flex;gap:8px;justify-content:flex-start;flex-wrap:wrap}.hint{font-size:10px;color:var(--muted)}.error-text{color:var(--bad);font-size:11px;min-height:18px}
+#loginGate{position:fixed;inset:0;background:#071b2ccc;z-index:30;display:grid;place-items:center;padding:18px}#loginGate[hidden]{display:none!important}.login-card{width:min(390px,100%);background:#fff;color:#112d47;border-radius:15px;padding:24px;box-shadow:0 20px 70px #0005}.login-card h2{margin:0 0 5px}.login-card p{margin:0 0 17px;color:#75879a;font-size:12px}.login-card input{width:100%;padding:10px;border:1px solid #dfe9f3;border-radius:8px;margin-bottom:10px}
+@media(max-width:1050px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.devices{grid-template-columns:1fr}.grid-bottom{grid-template-columns:1fr}}
+@media(max-width:720px){.side{position:relative;width:auto;inset:auto;min-height:0}.brand{padding:12px 16px}.side-label,.side-foot{display:none}.side-link{display:inline-flex;margin:7px 5px;padding:6px 10px;font-size:11px}.top,main{margin-right:0}.top{padding:10px 13px;min-height:60px}.top-title strong{font-size:14px}main{padding:15px 10px 40px}.hero h1{font-size:17px}.kpis{gap:8px}.kpi{padding:11px}.kpi strong{font-size:22px}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.device-actions .btn{flex:1}}
+</style>
+</head>
+<body>
+<aside class="side">
+  <div class="brand"><strong>OLT MANAGEMENT</strong><small>Huawei SmartAX · Admin Console</small></div>
+  <div class="side-label">مدیریت شبکه</div>
+  <a class="side-link active" href="/management">▦ داشبورد مدیریتی</a>
+  <a class="side-link" href="/">⌂ پنل اپراتور</a>
+  <div class="side-foot">مدیریت متمرکز تجهیزات OLT<br><span style="color:#83adbc">نسخه اولیه · فقط اطلاعات ثبت‌شده و نشست‌های واقعی</span></div>
+</aside>
+<header class="top">
+  <div class="top-title"><strong>مرکز مدیریت شبکه فیبر نوری</strong><small>مدیریت تجهیزات، نشست‌های ارتباطی و دسترسی اپراتوری</small></div>
+  <div class="top-actions"><span class="pill"><i class="dot ok"></i><span id="refreshState">آماده</span></span><button class="btn small" id="refreshBtn" type="button">⟳ بازخوانی</button><a class="btn small" href="/">ورود به پنل اپراتور</a></div>
+</header>
+<main>
+  <section class="hero">
+    <div><h1>داشبورد مدیریتی</h1><p>نمای کلی OLTهای تعریف‌شده و وضعیت نشست‌های فعال در سرور</p></div>
+    <div class="hero-actions"><button class="btn primary" id="addBtn" type="button">＋ افزودن OLT جدید</button></div>
+  </section>
+  <div class="notice" id="notice" role="status"></div>
+  <section class="kpis" id="kpis">
+    <article class="kpi"><small>کل دستگاه‌های ثبت‌شده</small><strong>—</strong><span>فهرست پیکربندی</span></article>
+    <article class="kpi"><small>نشست‌های برقرار</small><strong>—</strong><span>اتصال فعال در پردازش پنل</span></article>
+    <article class="kpi"><small>بدون نشست فعال</small><strong>—</strong><span>نیازمند اتصال اپراتور</span></article>
+    <article class="kpi"><small>OLT انتخاب‌شده</small><strong>—</strong><span>نشست فعال در این مرورگر</span></article>
+  </section>
+  <section class="panel">
+    <div class="panel-head"><div><h2>مدیریت تجهیزات OLT</h2><p>وضعیت اتصال، مشخصات دسترسی و عملیات مدیریتی هر دستگاه</p></div><span class="pill" id="deviceCount">۰ دستگاه</span></div>
+    <div class="devices" id="devices"><div class="empty"><strong>در حال دریافت فهرست دستگاه‌ها…</strong>لطفاً چند لحظه صبر کنید.</div></div>
+  </section>
+  <div class="grid-bottom">
+    <section class="panel">
+      <div class="panel-head"><div><h2>وضعیت نشست‌ها</h2><p>این وضعیت به معنی وجود نشست CLI در سرور است، نه تأیید سلامت تمام پورت‌های GPON.</p></div></div>
+      <div class="info-list" id="sessionInfo"><div class="info-row">در انتظار دریافت اطلاعات…</div></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><div><h2>مرزهای این نسخه</h2><p>اطلاعات حدسی یا ساختگی نمایش داده نمی‌شود.</p></div></div>
+      <div class="info-list">
+        <div class="info-row"><b>اطلاعات دستگاه</b><span>از فهرست OLTهای ذخیره‌شده و نشست‌های واقعی سرور خوانده می‌شود.</span></div>
+        <div class="info-row"><b>مانیتورینگ سخت‌افزار</b><span>در پنل اپراتور هر OLT و با قرائت مستقیم CLI انجام می‌شود.</span></div>
+        <div class="info-row"><b>رمز عبور</b><span>رمز نشست موقت ذخیره نمی‌شود؛ ذخیره دائمی فقط با حالت رمزنگاری‌شده انجام می‌شود.</span></div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<dialog id="editor">
+  <form class="dlg" id="deviceForm">
+    <h2 id="editorTitle">افزودن OLT جدید</h2>
+    <p>مشخصات دستگاه را وارد کنید. اطلاعات محرمانه در فهرست عمومی نمایش داده نمی‌شود.</p>
+    <div class="form-grid">
+      <div class="field"><label for="dName">نام نمایشی</label><input id="dName" required maxlength="80" placeholder="مثلاً OLT مرکز"></div>
+      <div class="field"><label for="dHost">آدرس IP یا Host</label><input id="dHost" class="ltr" required maxlength="255" placeholder="192.168.1.10"></div>
+      <div class="field"><label for="dProto">پروتکل</label><select id="dProto"><option value="ssh">SSH</option><option value="telnet">Telnet</option></select></div>
+      <div class="field"><label for="dPort">پورت</label><input id="dPort" class="ltr" type="number" min="1" max="65535" required></div>
+      <div class="field full"><label for="dMode">نحوه نگهداری اطلاعات ورود</label><select id="dMode"><option value="session">فقط هنگام اتصال (بدون ذخیره رمز)</option><option value="encrypted">ذخیره رمزنگاری‌شده روی سرور</option></select></div>
+      <div class="field" id="storedUserWrap"><label for="dUser">نام کاربری ذخیره‌شونده</label><input id="dUser" class="ltr" autocomplete="off"></div>
+      <div class="field" id="storedPassWrap"><label for="dPass">رمز عبور</label><input id="dPass" type="password" autocomplete="new-password"></div>
+      <div class="field full"><label for="dNotes">یادداشت</label><textarea id="dNotes" maxlength="500" placeholder="محل نصب، محدوده سرویس‌دهی یا توضیحات"></textarea></div>
+    </div>
+    <div class="hint" id="credentialHint">در حالت نشست موقت، نام کاربری و رمز فقط هنگام اتصال وارد می‌شوند.</div>
+    <div class="error-text" id="editorError"></div>
+    <div class="form-actions"><button class="btn primary" type="submit" id="saveDeviceBtn">ذخیره دستگاه</button><button class="btn" type="button" data-close="editor">انصراف</button></div>
+  </form>
+</dialog>
+
+<dialog id="connector">
+  <form class="dlg" id="connectForm">
+    <h2 id="connectTitle">اتصال به OLT</h2>
+    <p id="connectDescription"></p>
+    <div class="form-grid" id="sessionCredentials">
+      <div class="field"><label for="cUser">نام کاربری</label><input id="cUser" class="ltr" autocomplete="off"></div>
+      <div class="field"><label for="cPass">رمز عبور</label><input id="cPass" type="password" autocomplete="new-password"></div>
+    </div>
+    <div class="hint" id="connectHint"></div>
+    <div class="error-text" id="connectError"></div>
+    <div class="form-actions"><button class="btn primary" type="submit" id="connectBtn">اتصال</button><button class="btn" type="button" data-close="connector">انصراف</button></div>
+  </form>
+</dialog>
+
+<div id="loginGate" hidden>
+  <form class="login-card" id="loginForm">
+    <h2>ورود مدیر سیستم</h2><p>برای مشاهده داشبورد مدیریتی، رمز پنل را وارد کنید.</p>
+    <input id="loginPassword" type="password" required autocomplete="current-password" placeholder="رمز عبور مدیر">
+    <div class="error-text" id="loginError"></div>
+    <button class="btn primary" type="submit" style="width:100%">ورود</button>
+  </form>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const editor = $("#editor"), connector = $("#connector");
+let devices = [], activeId = null, activeStatus = null, editingId = null, connectingDevice = null;
+
+async function api(url, options={}) {
+  const init = {method: options.method || "GET", credentials: "same-origin", headers: {"Content-Type":"application/json"}};
+  if (options.body !== undefined) init.body = JSON.stringify(options.body);
+  const response = await fetch(url, init);
+  let data = {};
+  try { data = await response.json(); } catch (_) {}
+  if (!response.ok) {
+    const error = new Error(data.error || ("خطای HTTP " + response.status));
+    error.status = response.status;
+    throw error;
+  }
+  return data;
+}
+function el(tag, cls, text) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text !== undefined && text !== null) node.textContent = String(text);
+  return node;
+}
+function notify(message, type="success") {
+  const box=$("#notice"); box.textContent=message; box.className="notice show "+type;
+  window.clearTimeout(notify.timer); notify.timer=window.setTimeout(()=>box.className="notice",5000);
+}
+function fmt(n) { return Number(n||0).toLocaleString("fa-IR"); }
+function addPill(parent, text, state) {
+  const pill=el("span","pill"); pill.append(el("i","dot "+(state||"")),document.createTextNode(text)); parent.append(pill);
+}
+function render() {
+  const connected=devices.filter(d=>d.connected);
+  const active=devices.find(d=>d.id===activeId);
+  const k=$("#kpis"); k.textContent="";
+  [[ "کل دستگاه‌های ثبت‌شده",fmt(devices.length),"فهرست پیکربندی" ],
+   [ "نشست‌های برقرار",fmt(connected.length),"اتصال فعال در پردازش پنل" ],
+   [ "بدون نشست فعال",fmt(devices.length-connected.length),"نیازمند اتصال اپراتور" ],
+   [ "OLT انتخاب‌شده",active?active.name:"—","نشست فعال در این مرورگر" ]].forEach(x=>{
+    const card=el("article","kpi");card.append(el("small","",x[0]),el("strong","",x[1]),el("span","",x[2]));k.append(card);
+   });
+  $("#deviceCount").textContent=fmt(devices.length)+" دستگاه";
+  const box=$("#devices");box.textContent="";
+  if(!devices.length){
+    const empty=el("div","empty");empty.append(el("strong","","هنوز OLT ثبت نشده است"),document.createTextNode("برای شروع، اولین دستگاه را به فهرست مدیریتی اضافه کنید."),document.createElement("br"));
+    const add=el("button","btn primary small","افزودن اولین OLT");add.type="button";add.onclick=()=>openEditor();empty.append(add);box.append(empty);
+  }
+  devices.forEach(d=>{
+    const card=el("article","device");
+    const top=el("div","device-top"),ident=el("div","");
+    ident.append(el("div","device-name",d.name),el("div","device-host",d.host+":"+d.port));
+    const badge=el("span","pill");badge.append(el("i","dot "+(d.connected?"ok":"")),document.createTextNode(d.connected?"نشست برقرار":"بدون نشست"));top.append(ident,badge);card.append(top);
+    const pills=el("div","pills");
+    addPill(pills,d.proto.toUpperCase(),d.proto==="ssh"?"ok":"warn");
+    addPill(pills,d.credential_mode==="encrypted"?"رمز ذخیره‌شده رمزنگاری‌شده":"رمز فقط هنگام اتصال",d.credential_mode==="encrypted"?"ok":"");
+    if(d.id===activeId)addPill(pills,"انتخاب‌شده در این مرورگر","ok");
+    card.append(pills);
+    card.append(el("div","device-notes",d.notes||"بدون یادداشت"));
+    const actions=el("div","device-actions");
+    const primary=el("button","btn primary small",d.connected?(d.id===activeId?"OLT فعال":"فعال‌سازی نشست"):"اتصال");
+    primary.type="button";primary.disabled=d.connected&&d.id===activeId;
+    primary.onclick=()=>d.connected?selectDevice(d):openConnector(d);actions.append(primary);
+    const edit=el("button","btn small","ویرایش");edit.type="button";edit.disabled=!!d.connected;edit.title=d.connected?"ابتدا نشست این OLT را قطع کنید":"";edit.onclick=()=>openEditor(d);actions.append(edit);
+    if(d.connected){const disc=el("button","btn small","قطع اتصال");disc.type="button";disc.onclick=()=>disconnectDevice(d);actions.append(disc);}
+    const del=el("button","btn danger small","حذف");del.type="button";del.onclick=()=>deleteDevice(d);actions.append(del);
+    card.append(actions);box.append(card);
+  });
+  const info=$("#sessionInfo");info.textContent="";
+  if(!devices.length){info.append(el("div","info-row","فهرست دستگاه‌ها خالی است."));}
+  else devices.forEach(d=>{
+    const row=el("div","info-row");row.append(el("b","",d.name),el("span","",d.connected?(d.id===activeId?"نشست فعال و انتخاب‌شده":"نشست فعال در سرور"):"نشست فعالی در سرور وجود ندارد"));info.append(row);
+  });
+}
+async function refresh() {
+  $("#refreshState").textContent="در حال بازخوانی…";$("#refreshBtn").disabled=true;
+  try {
+    const results=await Promise.all([api("/api/status"),api("/api/devices")]);
+    activeStatus=results[0];activeId=activeStatus.device_id||null;devices=results[1].devices||[];render();
+    $("#refreshState").textContent="آخرین بازخوانی: "+new Date().toLocaleTimeString("fa-IR");
+  } catch(e) {
+    if(e.status===401){$("#loginGate").hidden=false;$("#refreshState").textContent="نیازمند ورود";}
+    else {notify(e.message,"error");$("#refreshState").textContent="خطا";}
+  } finally {$("#refreshBtn").disabled=false;}
+}
+function openEditor(device=null) {
+  editingId=device?.id||null;$("#deviceForm").reset();
+  $("#editorTitle").textContent=device?"ویرایش دستگاه OLT":"افزودن OLT جدید";
+  $("#dName").value=device?.name||"";$("#dHost").value=device?.host||"";
+  $("#dProto").value=device?.proto||"ssh";$("#dPort").value=device?.port||(device?.proto==="telnet"?23:22);
+  $("#dMode").value=device?.credential_mode||"session";$("#dUser").value="";$("#dPass").value="";$("#dNotes").value=device?.notes||"";
+  $("#dPass").placeholder=device?"برای حفظ رمز فعلی خالی بگذارید":"رمز عبور";
+  $("#editorError").textContent="";syncCredentialMode();editor.showModal();
+}
+function syncCredentialMode() {
+  const encrypted=$("#dMode").value==="encrypted";
+  $("#storedUserWrap").hidden=!encrypted;$("#storedPassWrap").hidden=!encrypted;
+  $("#dUser").required=encrypted&&!editingId;$("#dPass").required=encrypted&&!editingId;
+  $("#credentialHint").textContent=encrypted?"برای ذخیره رمزنگاری‌شده، کلید OLT_CREDENTIALS_KEY باید در محیط سرویس تنظیم شده باشد. در ویرایش، خالی گذاشتن رمز، مقدار فعلی را حفظ می‌کند.":"در حالت نشست موقت، نام کاربری و رمز فقط هنگام اتصال وارد می‌شوند و در فایل دستگاه‌ها ذخیره نمی‌شوند.";
+}
+$("#dMode").onchange=syncCredentialMode;
+$("#dProto").onchange=()=>{if(!$("#dPort").dataset.touched)$("#dPort").value=$("#dProto").value==="ssh"?22:23;};
+$("#dPort").oninput=()=>$("#dPort").dataset.touched="1";
+$("#deviceForm").onsubmit=async e=>{
+  e.preventDefault();$("#saveDeviceBtn").disabled=true;$("#editorError").textContent="";
+  const body={name:$("#dName").value.trim(),host:$("#dHost").value.trim(),proto:$("#dProto").value,port:$("#dPort").value,
+    credential_mode:$("#dMode").value,user:$("#dUser").value,password:$("#dPass").value,notes:$("#dNotes").value};
+  try {
+    if(editingId) await api("/api/devices/"+encodeURIComponent(editingId),{method:"PUT",body});
+    else await api("/api/devices",{method:"POST",body});
+    editor.close();notify(editingId?"مشخصات دستگاه به‌روزرسانی شد":"دستگاه به فهرست اضافه شد");await refresh();
+  } catch(err){$("#editorError").textContent=err.message;}
+  finally{$("#saveDeviceBtn").disabled=false;}
+};
+function openConnector(device) {
+  connectingDevice=device;$("#connectForm").reset();$("#connectTitle").textContent="اتصال به "+device.name;
+  $("#connectDescription").textContent=device.host+":"+device.port+" · "+device.proto.toUpperCase();
+  const needsCredentials=device.credential_mode!=="encrypted";
+  $("#sessionCredentials").hidden=!needsCredentials;
+  $("#cUser").required=needsCredentials;$("#cPass").required=needsCredentials;
+  $("#connectHint").textContent=needsCredentials?"این دستگاه با حالت نشست موقت ذخیره شده است؛ نام کاربری و رمز فقط برای همین اتصال استفاده می‌شوند.":"از اطلاعات ذخیره‌شده رمزنگاری‌شده استفاده می‌شود؛ برای اتصال نیازی به واردکردن مجدد رمز نیست.";
+  $("#connectError").textContent="";connector.showModal();
+}
+$("#connectForm").onsubmit=async e=>{
+  e.preventDefault();if(!connectingDevice)return;$("#connectBtn").disabled=true;$("#connectError").textContent="";
+  try {
+    await api("/api/connect",{method:"POST",body:{device_id:connectingDevice.id,user:$("#cUser").value,password:$("#cPass").value}});
+    connector.close();notify("اتصال به "+connectingDevice.name+" برقرار شد");await refresh();
+  }catch(err){$("#connectError").textContent=err.message;}
+  finally{$("#connectBtn").disabled=false;}
+};
+async function selectDevice(d) {
+  try{await api("/api/select-device",{method:"POST",body:{device_id:d.id}});notify(d.name+" به‌عنوان OLT فعال انتخاب شد");await refresh();}
+  catch(e){notify(e.message,"error");}
+}
+async function disconnectDevice(d) {
+  if(!confirm("نشست ارتباطی "+d.name+" قطع شود؟"))return;
+  try{await api("/api/devices/"+encodeURIComponent(d.id)+"/disconnect",{method:"POST",body:{}});notify("نشست "+d.name+" قطع شد");await refresh();}
+  catch(e){notify(e.message,"error");}
+}
+async function deleteDevice(d) {
+  if(!confirm("دستگاه «"+d.name+"» و نشست احتمالی آن حذف شود؟"))return;
+  try{await api("/api/devices/"+encodeURIComponent(d.id),{method:"DELETE"});notify("دستگاه حذف شد");await refresh();}
+  catch(e){notify(e.message,"error");}
+}
+$("#addBtn").onclick=()=>openEditor();
+$("#refreshBtn").onclick=refresh;
+document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>document.getElementById(b.dataset.close).close());
+$("#loginForm").onsubmit=async e=>{
+  e.preventDefault();$("#loginError").textContent="";
+  try{await api("/api/login",{method:"POST",body:{password:$("#loginPassword").value}});$("#loginGate").hidden=true;$("#loginPassword").value="";await refresh();}
+  catch(err){$("#loginError").textContent=err.message;}
+};
+refresh();
+</script>
+</body>
+</html>
