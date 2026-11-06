@@ -855,3 +855,19 @@ if __name__ == "__main__":
     if host != "127.0.0.1" and not UI_PASSWORD:
         print("!! هشدار: بدون UI_PASSWORD روی شبکه در دسترس است. حتماً UI_PASSWORD تنظیم کنید.")
     app.run(host=host, port=port, threaded=True)
+
+
+# ---------- MA5683T live chassis map (read-only) ----------
+from chassis_inventory import parse_chassis_inventory
+
+@app.get("/api/chassis-inventory")
+@need_conn
+def api_chassis_inventory():
+    """Return slot population read from the currently selected OLT, never a sample."""
+    raw = CONN.run("display board 0", timeout=25)
+    if OVERVIEW_ERROR.search(raw):
+        raise OLTError("دریافت اطلاعات کارت‌های شاسی ناموفق بود")
+    inventory = parse_chassis_inventory(raw)
+    return jsonify(model="MA5683T", device_id=session.get("active_olt_id"),
+                   slots=inventory["slots"], recognized=inventory["recognized"],
+                   unparsed=inventory["unparsed"], sampled_at=int(time.time()))
