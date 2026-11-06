@@ -1,0 +1,52 @@
+name: Export packaged application source
+
+on:
+  push:
+    branches: [web-multi-olt]
+    paths:
+      - ".github/workflows/export-source.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout development branch
+        uses: actions/checkout@v4
+        with:
+          ref: web-multi-olt
+
+      - name: Extract packaged source and apply live traffic patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/olt-src
+          unzip -q OLT-MA5683T-EMU-Fan-Fixed.zip -d /tmp/olt-src
+          PATCH_FILE="$(mktemp)"
+          base64 -d traffic-live.patch.gz.b64 | gzip -d > "$PATCH_FILE"
+          git apply --check --directory=/tmp/olt-src "$PATCH_FILE" || {
+            echo "Patch check failed against packaged source"
+            exit 1
+          }
+          git apply --directory=/tmp/olt-src "$PATCH_FILE"
+          SRC="/tmp/olt-src/OLT-MA5683T-Operator-Dashboard"
+          test -f "$SRC/app.py"
+          test -f "$SRC/index.html"
+          test -f "$SRC/services.json"
+          test -f "$SRC/requirements.txt"
+          python3 -m py_compile "$SRC/app.py"
+          rm -rf web-source
+          mkdir -p web-source
+          cp "$SRC/app.py" "$SRC/index.html" "$SRC/services.json" "$SRC/requirements.txt" "$SRC/README.md" web-source/
+          echo "Exported source files:"
+          find web-source -maxdepth 1 -type f -printf '%f %s bytes\\n' | sort
+
+      - name: Commit extracted source for review
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add web-source
+          git commit -m "build: export patched application source for web development"
+          git push origin web-multi-olt
