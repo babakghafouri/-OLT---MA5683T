@@ -895,17 +895,24 @@ def api_board_detail(slot):
             port_error = interface_out.strip() or "دستگاه ورود به رابط GPON را نپذیرفت"
         else:
             entered_gpon = True
-            port_state = CONN.run("display port state", timeout=25)
-            if ERR.search(port_state):
-                port_error = port_state.strip()
+            port_count = gpon_port_count(board["board"])
+            if port_count is None:
+                port_error = f"تعداد پورت برای مدل {board['board']} در جدول سازگاری تعریف نشده است"
             else:
-                port_count = gpon_port_count(board["board"])
-                if port_count is None:
-                    port_error = f"تعداد پورت برای مدل {board['board']} در جدول سازگاری تعریف نشده است"
-                else:
-                    for port_id in range(port_count):
-                        output = CONN.run(f"display port info {port_id}", timeout=25)
-                        port_info.append({"port_id": port_id, "raw": output})
+                # This firmware requires a port selector: "all" or a port ID 0..7.
+                # Query each ID separately so the UI can map a confirmed response
+                # to the corresponding frame/slot/port without guessing.
+                for port_id in range(port_count):
+                    output = CONN.run(f"display port state {port_id}", timeout=25)
+                    failed = bool(ERR.search(output))
+                    port_info.append({"port_id": port_id, "raw": output,
+                                      "ok": not failed})
+                successful = [item for item in port_info if item["ok"] and item["raw"].strip()]
+                ports = [f"0/{slot}/{item['port_id']}" for item in successful]
+                if not successful:
+                    port_error = "OLT هیچ خروجی معتبر برای پورت‌های این کارت برنگرداند؛ خروجی خام را بررسی کنید."
+                elif len(successful) < port_count:
+                    port_error = f"فقط {len(successful)} پورت از {port_count} پورت پاسخ معتبر دادند."
     except OLTError as exc:
         port_error = str(exc)
     finally:
@@ -914,8 +921,6 @@ def api_board_detail(slot):
                 CONN.run("quit", timeout=15)
             except OLTError as exc:
                 port_error = (port_error + "; " if port_error else "") + f"بازگشت از GPON interface ناموفق: {exc}"
-    info_raw = "\\n".join(item["raw"] for item in port_info)
-    ports = parse_board_ports(info_raw, slot)
     return jsonify(slot=slot, board=board, detail=detail[:30000],
                    port_state=port_state[:30000], port_info=port_info,
                    ports=ports, port_error=port_error,
