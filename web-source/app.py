@@ -17,6 +17,8 @@ from pathlib import Path
 
 from flask import Flask, jsonify, request, session
 
+from ont_details import parse_ont_details
+
 BASE = Path(__file__).parent
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY") or secrets.token_hex(16)
@@ -454,11 +456,14 @@ def do_verify(f, s, p, ont_id):
         m = re.search(rx, info, re.I)
         return m.group(1) if m else ""
 
+    details = parse_ont_details(info, optical)
     return {
         "run_state": pick(r"Run state\s*:\s*(\S+)"),
         "config_state": pick(r"Config state\s*:\s*(\S+)"),
         "match_state": pick(r"Match state\s*:\s*(\S+)"),
-        "rx_power": (re.search(r"Rx optical power\(dBm\)\s*:\s*(\S+)", optical) or [None, ""])[1],
+        "rx_power": details.get("rx_power_dbm") or (re.search(r"Rx optical power\(dBm\)\s*:\s*(\S+)", optical) or [None, ""])[1],
+        "details": details,
+        "sampled_at": int(time.time()),
         "info": info,
         "service_ports": sps,
         "optical": optical,
