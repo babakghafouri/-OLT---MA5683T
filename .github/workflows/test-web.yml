@@ -25,6 +25,8 @@ jobs:
           pip install -r web-source/requirements.txt
       - name: Compile Python
         run: python -m py_compile web-source/app.py
+      - name: Run chassis inventory unit tests
+        run: python -m unittest discover -s web-source -p 'test_*.py' -v
       - name: Validate JavaScript syntax
         run: |
           python - <<'PY'
