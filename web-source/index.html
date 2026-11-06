@@ -557,7 +557,7 @@ $("#deleteDevice").onclick = async () => {
   const id=$("#deviceSelect").value;
   if(!id){toast("ابتدا یک دستگاه ذخیره‌شده انتخاب کنید",true);return;}
   if(!confirm("دستگاه انتخاب‌شده حذف شود؟"))return;
-  try { await api("/api/devices/"+encodeURIComponent(id), undefined); toast("دستگاه حذف شد"); await refreshDevices(); }
+  try { const r=await fetch("/api/devices/"+encodeURIComponent(id),{method:"DELETE"}); const j=await r.json(); if(!r.ok)throw new Error(j.error||"خطا در حذف"); toast("دستگاه حذف شد"); await refreshDevices(); }
   catch(e){toast(e.message,true);}
 };
 refreshDevices().catch(e=>toast(e.message,true));
