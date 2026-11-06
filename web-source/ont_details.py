@@ -113,22 +113,21 @@ def parse_service_ports(raw):
     return rows
 
 
-def _connection_time_is_reliable(last_up_time, online_duration):
-    """Reject known epoch-like timestamps and implausibly long ONT sessions."""
+def _connection_time_diagnostic(last_up_time, online_duration):
+    """Return a conservative validity flag and human-readable reason."""
     if not last_up_time:
-        return False
+        return False, "OLT برای Last Up زمان معتبری گزارش نکرده است."
     try:
         stamp = datetime.fromisoformat(last_up_time.replace("Z", "+00:00"))
     except (TypeError, ValueError):
-        return False
+        return False, "قالب تاریخ Last Up قابل تشخیص نیست."
     if stamp.year < 2010:
-        return False
+        return False, f"تاریخ Last Up با سال {stamp.year} گزارش شده و به‌عنوان زمان واقعی اتصال قابل اتکا نیست."
     if online_duration:
         match = re.search(r"(\d+)\s*day", online_duration, re.I)
         if match and int(match.group(1)) > 3650:
-            return False
-    return True
-
+            return False, "مدت اتصال گزارش‌شده بیش از ۱۰ سال است و نیاز به بررسی ساعت/شمارنده OLT دارد."
+    return True, "زمان اتصال در خروجی OLT معتبر به نظر می‌رسد."
 
 def parse_ont_details(info_raw, optical_raw, service_ports_raw=""):
     """Return normalized fields plus source-labelled CLI properties."""
@@ -154,16 +153,12 @@ def parse_ont_details(info_raw, optical_raw, service_ports_raw=""):
         value = next((source[key] for source in sources for key in aliases if source.get(key)), None)
         fields[name] = value
 
-    reliable = _connection_time_is_reliable(fields["last_up_time"], fields["online_duration"])
+    reliable, timing_note = _connection_time_diagnostic(fields["last_up_time"], fields["online_duration"])
     service_rows = parse_service_ports(service_ports_raw)
     return {
         **fields,
         "connection_timing_valid": reliable,
-        "connection_timing_note": (
-            "زمان اتصال در خروجی OLT معتبر به نظر می‌رسد."
-            if reliable else
-            "زمان اتصال قابل اتکا نیست؛ Last Up با سال 2000 گزارش شده یا مقدار زمانی معتبر وجود ندارد."
-        ),
+        "connection_timing_note": timing_note,
         "service_port_rows": service_rows,
         "service_port_count": len(service_rows),
         "info_properties": info,
