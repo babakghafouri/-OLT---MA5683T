@@ -858,7 +858,7 @@ if __name__ == "__main__":
 
 
 # ---------- MA5683T live chassis map (read-only) ----------
-from chassis_inventory import parse_chassis_inventory, parse_board_ports
+from chassis_inventory import parse_chassis_inventory, parse_board_ports, gpon_port_count
 
 @app.get("/api/chassis-inventory")
 @need_conn
@@ -885,12 +885,38 @@ def api_board_detail(slot):
         raise ValueError("در این اسلات کارت نصب‌شده‌ای از خروجی زنده OLT شناسایی نشد")
     detail = CONN.run(f"display board 0/{slot}", timeout=25)
     port_state = ""
+    port_info = []
     port_error = ""
+    entered_gpon = False
     try:
-        port_state = CONN.run(f"display port state 0/{slot}", timeout=25)
+        # MA56xx GPON service-port commands run in GPON interface context.
+        interface_out = CONN.run(f"interface gpon 0/{slot}", timeout=25)
+        if ERR.search(interface_out):
+            port_error = interface_out.strip() or "دستگاه ورود به رابط GPON را نپذیرفت"
+        else:
+            entered_gpon = True
+            port_state = CONN.run("display port state", timeout=25)
+            if ERR.search(port_state):
+                port_error = port_state.strip()
+            else:
+                port_count = gpon_port_count(board["board"])
+                if port_count is None:
+                    port_error = f"تعداد پورت برای مدل {board['board']} در جدول سازگاری تعریف نشده است"
+                else:
+                    for port_id in range(port_count):
+                        output = CONN.run(f"display port info {port_id}", timeout=25)
+                        port_info.append({"port_id": port_id, "raw": output})
     except OLTError as exc:
         port_error = str(exc)
-    ports = parse_board_ports(port_state, slot)
+    finally:
+        if entered_gpon:
+            try:
+                CONN.run("quit", timeout=15)
+            except OLTError as exc:
+                port_error = (port_error + "; " if port_error else "") + f"بازگشت از GPON interface ناموفق: {exc}"
+    info_raw = "\\n".join(item["raw"] for item in port_info)
+    ports = parse_board_ports(info_raw, slot)
     return jsonify(slot=slot, board=board, detail=detail[:30000],
-                   port_state=port_state[:30000], ports=ports,
-                   port_error=port_error, sampled_at=int(time.time()))
+                   port_state=port_state[:30000], port_info=port_info,
+                   ports=ports, port_error=port_error,
+                   sampled_at=int(time.time()))
