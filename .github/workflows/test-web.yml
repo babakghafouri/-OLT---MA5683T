@@ -24,7 +24,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r web-source/requirements.txt
       - name: Compile Python
-        run: python -m py_compile web-source/app.py
+        run: python -m py_compile web-source/app.py web-source/ont_details.py
       - name: Run chassis inventory unit tests
         run: python -m unittest discover -s web-source -p 'test_*.py' -v
       - name: Validate JavaScript syntax
