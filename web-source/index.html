@@ -989,6 +989,52 @@ main{
   .ap-module-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 
+
+/* ===== RTL correction: Persian operator workspace ===== */
+html:not([data-theme=dark]) body{direction:rtl;text-align:right}
+.nav-side{
+  left:auto!important;right:0!important;width:220px;
+  border-right:0;border-left:1px solid #e7ecf2;
+}
+.nav-side .tab{
+  direction:rtl;text-align:right;justify-content:flex-start;
+  border-left:0!important;border-right:3px solid transparent!important;
+}
+.nav-side .tab[aria-selected=true]{
+  border-left:0!important;border-right:3px solid #12813a!important;
+}
+.bar{
+  margin-right:220px!important;margin-left:0!important;
+  direction:rtl;text-align:right;
+}
+.brand{direction:rtl}
+.header-title{text-align:center}
+.header-tools{direction:rtl}
+main{
+  margin-right:220px!important;margin-left:0!important;
+  text-align:right;direction:rtl;
+}
+.dash-heading,.dash-toolbar{direction:rtl}
+.dash-section,.ap-overview-section{direction:rtl;text-align:right}
+.ap-overview-card,.ap-software-fact,.ap-module-copy{text-align:right}
+.ap-traffic-rate{text-align:right}
+.ap-traffic-rate strong{text-align:left}
+.ap-traffic-foot{text-align:right}
+.ap-fan-status{direction:rtl;text-align:right}
+.ap-home-grid,.dash-cols,.dash-bottom{direction:rtl}
+.ap-module-card{direction:rtl}
+.dash-quick{direction:rtl}
+.dash-quick-title{text-align:right}
+.alarm-preview{direction:rtl;text-align:right}
+@media(max-width:1120px){
+  .bar,main{margin-right:190px!important;margin-left:0!important}
+}
+@media(max-width:730px){
+  .nav-side{right:auto!important;left:auto!important}
+  .bar,main{margin-right:0!important;margin-left:0!important}
+  .nav-side .tab{direction:rtl;text-align:right}
+}
+
 </style>
 </head>
 <body>
