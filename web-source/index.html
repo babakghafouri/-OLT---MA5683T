@@ -316,6 +316,11 @@ main{max-width:none;margin-right:228px;padding:24px 26px 65px;margin-left:0}
     <p class="muted">با Telnet یا SSH وصل شوید. نام کاربری و رمز فقط تا زمان قطع اتصال در حافظهٔ پنل می‌ماند.</p>
     <form class="panel" id="connForm" autocomplete="off">
       <div class="row">
+        <label class="field" style="flex-basis:220px"><span>دستگاه‌های ذخیره‌شده</span><select id="deviceSelect"><option value="">اتصال جدید / ورود دستی</option></select></label>
+        <label class="field" style="flex-basis:220px"><span>نام نمایشی OLT (برای ذخیره)</span><input id="deviceName" placeholder="مثلاً OLT مرکز"></label>
+        <label class="field" style="flex-basis:180px"><span>نحوه نگهداری رمز</span><select id="credentialMode"><option value="session">فقط همین نشست</option><option value="encrypted">ذخیره رمزنگاری‌شده</option></select></label>
+      </div>
+      <div class="row">
         <label class="field" style="flex-basis:220px"><span>آدرس OLT</span><input id="host" class="ltr" placeholder="192.168.1.10" required></label>
         <label class="field" style="flex-basis:120px"><span>پروتکل</span>
           <select id="proto" class="ltr"><option value="telnet">Telnet</option><option value="ssh">SSH</option></select></label>
@@ -326,7 +331,11 @@ main{max-width:none;margin-right:228px;padding:24px 26px 65px;margin-left:0}
         <label class="field"><span>رمز عبور</span><input id="pw" type="password" class="ltr" required autocomplete="new-password"></label>
       </div>
       <div class="err" id="connErr" style="margin-top:12px" hidden></div>
-      <div style="margin-top:16px"><button class="btn primary" id="connect" type="submit">اتصال</button></div>
+      <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn primary" id="connect" type="submit">اتصال</button>
+        <button class="btn" id="saveDevice" type="button">ذخیره دستگاه در فهرست</button>
+        <button class="btn" id="deleteDevice" type="button">حذف دستگاه انتخاب‌شده</button>
+      </div>
     </form>
   </section>
 
@@ -513,11 +522,50 @@ function setConnected(st) {
 /* ---------- اتصال ---------- */
 $("#host").value = store.get("olt.host", ""); $("#user").value = store.get("olt.user", "");
 $("#proto").value = store.get("olt.proto", "telnet");
+
+async function refreshDevices() {
+  const data = await api("/api/devices");
+  const select = $("#deviceSelect"), current = select.value;
+  select.innerHTML = '<option value="">اتصال جدید / ورود دستی</option>';
+  for (const d of data.devices) {
+    const opt = h("option", {value:d.id, text:d.name + " · " + d.host + " · " + d.proto.toUpperCase()});
+    select.append(opt);
+  }
+  if ([...select.options].some(o => o.value === current)) select.value = current;
+}
+$("#deviceSelect").onchange = async () => {
+  const id = $("#deviceSelect").value;
+  if (!id) return;
+  const data = await api("/api/devices");
+  const d = data.devices.find(x => x.id === id);
+  if (!d) return;
+  $("#host").value = d.host; $("#proto").value = d.proto; $("#cport").value = d.port;
+  $("#deviceName").value = d.name; $("#credentialMode").value = d.credential_mode || "session";
+  $("#pw").value = "";
+  $("#pw").required = d.credential_mode !== "encrypted";
+  $("#user").required = d.credential_mode !== "encrypted";
+};
+$("#saveDevice").onclick = async () => {
+  try {
+    await api("/api/devices", {name:$("#deviceName").value,host:$("#host").value.trim(),
+      proto:$("#proto").value,port:$("#cport").value,user:$("#user").value,password:$("#pw").value,
+      credential_mode:$("#credentialMode").value});
+    await refreshDevices(); toast("دستگاه ذخیره شد");
+  } catch(e) { toast(e.message,true); }
+};
+$("#deleteDevice").onclick = async () => {
+  const id=$("#deviceSelect").value;
+  if(!id){toast("ابتدا یک دستگاه ذخیره‌شده انتخاب کنید",true);return;}
+  if(!confirm("دستگاه انتخاب‌شده حذف شود؟"))return;
+  try { await api("/api/devices/"+encodeURIComponent(id), undefined); toast("دستگاه حذف شد"); await refreshDevices(); }
+  catch(e){toast(e.message,true);}
+};
+refreshDevices().catch(e=>toast(e.message,true));
 $("#connForm").onsubmit = async e => {
   e.preventDefault();
   const btn = $("#connect"); btn.disabled = true; btn.textContent = "در حال اتصال…"; $("#connErr").hidden = true;
   try {
-    await api("/api/connect", {host: $("#host").value.trim(), proto: $("#proto").value, port: $("#cport").value, user: $("#user").value, password: $("#pw").value});
+    await api("/api/connect", {device_id: $("#deviceSelect").value, host: $("#host").value.trim(), proto: $("#proto").value, port: $("#cport").value, user: $("#user").value, password: $("#pw").value});
     store.set("olt.host", $("#host").value.trim()); store.set("olt.user", $("#user").value); store.set("olt.proto", $("#proto").value);
     $("#pw").value = "";
     await boot();
