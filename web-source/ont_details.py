@@ -50,7 +50,8 @@ ALIASES = {
     "dba_type": ("dbatype",),
     "memory_occupation": ("memoryoccupation",),
     "cpu_occupation": ("cpuoccupation",),
-    "temperature_c": ("temperaturec", "onttemperaturec", "temperature"),
+    "temperature_c": ("temperaturec", "onttemperaturec"),
+    "ont_temperature": ("temperature",),
     "authentic_type": ("authentictype", "authenticationtype"),
     "management_mode": ("managementmode",),
     "software_work_mode": ("softwareworkmode",),
@@ -144,7 +145,7 @@ def parse_ont_details(info_raw, optical_raw, service_ports_raw=""):
             or name.endswith("_threshold_c")
             or name.endswith("_threshold_v")
             or name in {
-                "module_type", "module_subtype", "used_type", "encapsulation_type",
+                "temperature_c", "module_type", "module_subtype", "used_type", "encapsulation_type",
                 "vendor_name", "vendor_rev", "vendor_pn", "vendor_sn", "date_code",
                 "optical_power_precision_dbm", "laser_bias_current_ma", "voltage_v",
             }
