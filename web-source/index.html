@@ -812,6 +812,183 @@ input,select,textarea{border-radius:7px}
   .dash-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 
+
+/* ===== aaPanel-inspired light operator UI (presentation layer only) ===== */
+html:not([data-theme=dark]){
+  color-scheme:light;
+  --bg:#f2f5f9;--panel:#fff;--sunk:#f6f8fb;--ink:#263548;--mute:#7b899b;
+  --line:#e6ebf1;--accent:#16a34a;--accent-ink:#fff;--ok:#16a34a;
+  --bad:#e34f5f;--warn:#e8a12b;--shadow:0 2px 12px rgba(26,44,68,.055);
+}
+html:not([data-theme=dark]) body{background:var(--bg);color:var(--ink)}
+.nav-side{
+  left:0!important;right:auto!important;width:220px;
+  background:#f8fafc;color:#334155;border-right:1px solid #e7ecf2;
+  box-shadow:2px 0 12px rgba(15,23,42,.035);
+}
+.nav-user{min-height:76px;padding:16px 14px;border-bottom:1px solid #e8edf3;color:#263548}
+.nav-user strong{font-size:13px}.nav-user small{color:#8391a2}
+.user-avatar{background:#e8f7ed;color:#168542;border:1px solid #d7efdf}
+.nav-side .tabs{padding:14px 9px;gap:4px}
+.nav-side .tab{
+  direction:ltr;text-align:left;justify-content:flex-start;gap:11px;
+  min-height:40px;padding:0 11px;border:0!important;
+  border-left:3px solid transparent!important;border-right:0!important;
+  border-radius:6px;color:#526174;background:transparent;
+  font-size:12px;font-weight:500;box-shadow:none;
+}
+.nav-side .tab:hover{background:#edf2f6;color:#263548}
+.nav-side .tab[aria-selected=true]{
+  color:#fff;background:#16a34a;border-left-color:#12813a!important;
+  border-right:0!important;font-weight:700;box-shadow:none;
+}
+.nav-ico{width:22px;font-size:19px;color:#738196}
+.nav-side .tab[aria-selected=true] .nav-ico{color:#fff}
+.nav-bottom{padding:14px 13px;border-top:1px solid #e8edf3;color:#526174;font-size:11px}
+.nav-bottom small{color:#8b98a8}.tiny-led{background:#16a34a}
+.bar{
+  margin-left:220px!important;margin-right:0!important;min-height:58px;
+  padding:8px 20px;background:#fff;border-bottom:1px solid #e8edf3;
+  box-shadow:0 1px 6px rgba(15,23,42,.025);direction:ltr;
+}
+.brand{direction:ltr;gap:9px;font-size:15px}
+.brand-mark{width:36px;height:36px;line-height:36px;border-radius:8px;
+  background:#eaf7ee;border:1px solid #d8efdf;color:#159447;font-size:20px}
+.brand-device{color:#526174}
+.header-title{text-align:center}
+.header-title strong{font-size:15px;color:#263548}
+.header-title small{font-size:10px;color:#8491a1}
+.header-tools{direction:rtl;gap:8px}
+.connection-indicator{border:1px solid #e5eee8;background:#f0faf3;color:#168447}
+.iconbtn{border-color:#e5eaf0;background:#fff;color:#718096}
+main{
+  max-width:none!important;margin-left:220px!important;margin-right:0!important;
+  padding:20px 22px 54px;
+}
+.panel,.ops-panel,.ma-chassis,.dash-section,.traffic-card{
+  box-shadow:var(--shadow);border-color:#e8edf3;
+}
+.dash-heading{margin-bottom:13px}
+.dash-heading h1{font-size:18px;font-weight:700}
+.dash-heading p{font-size:11px}
+.dash-notice{border-radius:8px;box-shadow:0 1px 5px rgba(15,23,42,.025)}
+.dash-section{
+  background:#fff;border:1px solid #e8edf3;border-radius:10px;
+  box-shadow:0 2px 10px rgba(25,45,70,.045);padding:16px;margin-bottom:14px;
+}
+.dash-section-title{font-size:14px;color:#263548}
+.dash-section-title span{color:#16a34a}
+.ap-status-grid{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;margin-bottom:14px;
+}
+.ap-status-grid .dash-gauge{
+  min-height:145px;padding:12px 10px;background:#fff;border:1px solid #edf1f5;
+  border-radius:10px;box-shadow:0 2px 9px rgba(25,45,70,.045);
+  display:flex;flex-direction:column;justify-content:center;
+}
+.ap-status-grid .dash-gauge .gtitle{font-size:11px;color:#7d8b9b}
+.ap-status-grid .dash-gauge .dial{
+  width:78px;height:78px;margin:7px auto 5px;
+  background:conic-gradient(#16a34a var(--val,0%),#e7ebef 0);
+}
+.ap-status-grid .dash-gauge .dial:after{inset:8px;background:#fff}
+.ap-status-grid .dash-gauge .dial span{font-size:16px;color:#263548}
+.ap-status-grid .dash-gauge .gsub{font-size:10px;color:#8a97a7}
+.ap-overview-section{padding:16px;margin-bottom:14px}
+.ap-overview-grid{
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;
+}
+.ap-overview-card{
+  min-width:0;min-height:88px;padding:12px 13px;border-radius:9px;
+  border:1px solid #edf1f5;background:#fff;display:flex;flex-direction:column;
+  justify-content:space-between;box-shadow:0 1px 5px rgba(25,45,70,.025);
+}
+.ap-overview-card .label{font-size:10px;color:#8290a0}
+.ap-overview-card strong{
+  display:block;font-size:21px;line-height:1.35;font-weight:750;
+  color:#263548;overflow-wrap:anywhere;
+}
+.ap-overview-card strong.ltr{font-family:var(--mono);font-size:17px}
+.ap-overview-card .foot{font-size:10px;color:#8a97a7;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ap-overview-card.good strong{color:#159447}
+.ap-overview-card.warn strong{color:#c88a22}
+.ap-home-grid{
+  display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);
+  gap:14px;margin-bottom:14px;align-items:stretch;
+}
+.ap-home-grid>.dash-section{margin:0;min-width:0}
+.ap-software-facts{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;margin-bottom:12px;
+}
+.ap-software-fact{
+  min-width:0;padding:9px 11px;background:#f6f8fb;
+  border:1px solid #e9eef4;border-radius:8px;
+}
+.ap-software-fact small{display:block;color:#8290a0;font-size:10px;margin-bottom:3px}
+.ap-software-fact strong{display:block;color:#263548;font-size:12px;overflow-wrap:anywhere}
+.ap-software-fact strong.ltr{font-family:var(--mono);font-size:11px}
+.ap-module-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ap-module-card{
+  display:flex;align-items:center;gap:9px;min-width:0;padding:10px;
+  border:1px solid #edf1f5;border-radius:8px;background:#fff;
+}
+.ap-module-icon{
+  width:36px;height:36px;flex:none;border-radius:9px;background:#eaf7ee;
+  color:#169447;display:grid;place-items:center;font-size:18px;font-weight:700;
+}
+.ap-module-copy{min-width:0;flex:1}
+.ap-module-copy strong{display:block;font-size:11px;color:#263548;overflow-wrap:anywhere}
+.ap-module-copy small{display:block;font-size:9px;color:#8a97a7;overflow-wrap:anywhere}
+.ap-module-state{font-size:9px;font-weight:700;color:#159447;white-space:nowrap}
+.ap-module-state.standby{color:#b88323}
+.ap-module-state.bad{color:#d94d5d}
+.ap-traffic-panel{display:flex;flex-direction:column}
+.ap-traffic-rates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:9px}
+.ap-traffic-rate{padding:9px 11px;border-radius:8px;background:#f5f7fa;border:1px solid #edf1f5;min-width:0}
+.ap-traffic-rate small{display:block;font-size:10px;color:#8290a0}
+.ap-traffic-rate strong{display:block;font:700 15px var(--mono);direction:ltr;text-align:right;color:#263548;overflow-wrap:anywhere}
+.ap-traffic-preview{min-height:175px;overflow:hidden}
+.ap-traffic-preview .traffic-chart{width:100%;min-height:175px}
+.ap-traffic-preview .dash-empty{min-height:175px;display:grid;place-items:center;text-align:center}
+.ap-traffic-foot{font-size:10px;color:#8a97a7;margin-top:8px}
+.ap-fan-status{
+  margin-top:10px;padding:10px 12px;border-radius:8px;background:#f6f8fb;
+  border:1px solid #e9eef4;font-size:11px;display:flex;align-items:center;gap:8px;
+}
+.ap-fan-status .led{width:8px;height:8px}
+.ap-fan-status.ok{color:#168447}.ap-fan-status.bad{color:#d94d5d}.ap-fan-status.unknown{color:#7b899b}
+.dash-cols{gap:14px;margin-bottom:14px}
+.dash-cols .dash-section{margin-bottom:0}
+.dash-bottom{gap:14px}
+.dash-quick{box-shadow:var(--shadow);border-color:#e8edf3;border-radius:10px}
+.btn.primary{background:#16a34a;border-color:#16a34a}
+.btn.primary:hover{filter:brightness(1.04)}
+@media(max-width:1450px){
+  .ap-overview-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:1120px){
+  .nav-side{width:190px}
+  .bar,main{margin-left:190px!important;margin-right:0!important}
+  .ap-home-grid{grid-template-columns:1fr}
+  .dash-cols,.dash-bottom{grid-template-columns:1fr}
+}
+@media(max-width:730px){
+  .nav-side{position:relative;left:auto!important;right:auto!important;top:auto;bottom:auto;
+    width:auto;height:auto;min-height:0;display:block;border-right:0;border-bottom:1px solid #e7ecf2}
+  .nav-user{display:none}
+  .nav-side .tabs{display:flex!important;flex-direction:row;overflow-x:auto;white-space:nowrap;padding:7px;gap:5px}
+  .nav-side .tab{min-width:max-content;min-height:37px}
+  .nav-bottom{display:none}
+  .bar,main{margin-left:0!important;margin-right:0!important}
+  .bar{position:relative;flex-wrap:wrap;padding:8px 12px}
+  main{padding:14px 12px 36px}
+  .ap-status-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ap-overview-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ap-module-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
 </style>
 </head>
 <body>
@@ -1837,9 +2014,11 @@ async function scanObservedPorts(){
 }
 function renderModernDashboard(){
  const target=viewDash();target.textContent="";
- const live=!!S.connected,boards=live?rawSection("inventory","boards"):{supported:true,raw:sampleBoard};
+ const live=!!S.connected;
+ const boards=live?rawSection("inventory","boards"):{supported:true,raw:sampleBoard};
  const complete=live && ["system","inventory","resource","alarms","uplinks"].every(k=>operatorCache[k]);
- const version=complete?parseMA5683TVersion(rawSection("system","version")):{version:"MA5600V800R013C10",patch:"SPC205",uptime:"3 day(s) 0 hour(s) 30 minute(s)",product:"MA5683T"};
+ const version=complete?parseMA5683TVersion(rawSection("system","version")):
+   (!live?{version:"MA5600V800R013C10",patch:"SPC205",uptime:"3 day(s) 0 hour(s) 30 minute(s)",product:"MA5683T"}:{});
  const stats=live?scanPortData:null;
  const total=stats?.items.reduce((sum,p)=>sum+p.used,0)??null;
  const online=stats?.items.reduce((sum,p)=>sum+p.online,0)??null;
@@ -1847,78 +2026,196 @@ function renderModernDashboard(){
  const alarms=complete?parseAlarmCount():null;
  const cpu=complete?parsedPercent("resource","cpu","cpu|usage|utilization"):null;
  const ram=complete?parsedPercent("resource","memory","memory|usage|occupancy"):null;
- const temp=complete?parseTemperature():null; // Read from active SCUN slot
- const fan=complete?parseFanStatus():null; // `display emu`: EMU 0 FAN normal
+ const temp=complete?parseTemperature():null;
+ const fan=complete?parseFanStatus():null;
  const links=complete?uplinkPorts():[];
+ const uplinkOnline=links.filter(x=>x.link==="online").length;
  const boardList=parseMA5683TBoards(boards);
+ const boardKnown=!!boards?.supported && boardList.size>0;
  const installed=[...boardList.values()].filter(x=>x.model).length;
+
  if(!live){
-  const notice=h("div",{class:"dash-notice"},h("div",{},h("strong",{text:"حالت پیش‌نمایش · اتصال برقرار نیست"}),
-  h("div",{text:"فقط نقشه کارت‌ها و نسخه نرم‌افزار از خروجی قبلی شما هستند؛ عددهای سایر بخش‌ها ساختگی نیستند."})),
-  h("button",{class:"btn primary small",type:"button",onclick:()=>setTab("connect"),text:"اتصال به OLT"}));target.append(notice);
- } else if(!complete){target.append(h("div",{class:"dash-notice"},h("span",{text:"در حال دریافت یا تکمیل اطلاعات از OLT. «—» یعنی مقدار قابل اطمینان هنوز خوانده نشده است."})));}
- const row=h("div",{class:"dash-kpis"});
- row.append(metricCard("ONT ثبت‌شده",formatNumber(total),"♙","","پورت‌های اسکن‌شده"),
-    metricCard("ONT آنلاین",formatNumber(online),"◉","green","پورت‌های اسکن‌شده"),
-    metricCard("ONT آفلاین",formatNumber(offline),"◌","red","پورت‌های اسکن‌شده"),
-    metricCard("آلارم فعال",formatNumber(alarms),"♧","red","فقط در صورت تشخیص تعداد"),
-    metricCard("CPU",cpu==null?"—":cpu+"%","▣","","قرائت OLT"),
-    metricCard("RAM",ram==null?"—":ram+"%","▥","","قرائت OLT"));
- target.append(row);
+  target.append(h("div",{class:"dash-notice"},
+   h("div",{},h("strong",{text:"حالت پیش‌نمایش · اتصال برقرار نیست"}),
+    h("div",{text:"نقشه شاسی و نسخه نرم‌افزار نمونه‌اند؛ شاخص‌های زنده تا اتصال به OLT نمایش داده نمی‌شوند."})),
+   h("button",{class:"btn primary small",type:"button",onclick:()=>setTab("connect"),text:"اتصال به OLT"})));
+ }else if(!complete){
+  target.append(h("div",{class:"dash-notice"},
+   h("span",{text:"در حال دریافت یا تکمیل اطلاعات از OLT. علامت «—» یعنی مقدار قابل اطمینان هنوز خوانده نشده است."})));
+ }
+
+ /* چهار کارت حلقه‌ای؛ تمام مقادیر فقط از خروجی CLI */
+ const statusGrid=h("div",{class:"ap-status-grid"});
+ statusGrid.append(
+  machineMetric("CPU",cpu,"%",cpu,"پردازنده · قرائت OLT"),
+  machineMetric("RAM",ram,"%",ram,"حافظه · قرائت OLT"),
+  machineMetric("دما",temp,"°C",temp==null?null:Math.min(100,Math.max(0,temp)),"دمای برد کنترل"),
+  machineMetric("Uplink",links.length?(uplinkOnline+"/"+links.length):null,"",
+   links.length?uplinkOnline/links.length*100:null,"GE آنلاین از پورت‌های شناسایی‌شده")
+ );
+ target.append(statusGrid);
+
+ /* نمای کلی */
+ const overview=sec("نمای کلی","▤","خلاصه وضعیت OLT و مشترکین");
+ overview.classList.add("ap-overview-section");
+ const overviewGrid=h("div",{class:"ap-overview-grid"});
+ const overviewCard=(label,value,foot,tone)=>h("article",{class:"ap-overview-card "+(tone||"")},
+  h("span",{class:"label",text:label}),
+  h("strong",{text:txt(value)}),
+  h("small",{class:"foot",text:foot||""}));
+ overviewGrid.append(
+  overviewCard("مدل OLT",version.product||(!live?"MA5683T":"—"),live?"اطلاعات display version":"مدل در پیش‌نمایش"),
+  overviewCard("کارت‌های نصب‌شده",boardKnown?String(installed):"—",boardKnown?"از خروجی Inventory":"اطلاعات کارت‌ها موجود نیست"),
+  overviewCard("ONT ثبت‌شده",formatNumber(total),stats?stats.items.length+" پورت اسکن‌شده":"پس از اسکن پورت‌های انتخابی"),
+  overviewCard("آنلاین / آفلاین",total==null?"—":formatNumber(online)+" / "+formatNumber(offline),"بر اساس پورت‌های اسکن‌شده","good"),
+  overviewCard("آلارم فعال",formatNumber(alarms),complete?"طبق خروجی CLI":"در انتظار دریافت آلارم‌ها",alarms>0?"warn":"")
+ );
+ overview.append(overviewGrid);target.append(overview);
+
+ /* کارت‌های سخت‌افزاری و نسخه؛ جایگزین بخش Software در الگوی aaPanel */
+ const homeGrid=h("div",{class:"ap-home-grid"});
+ const software=sec("ماژول‌ها و نرم‌افزار","▣",live?"اطلاعات دریافت‌شده از OLT":"پیش‌نمایش غیرزنده");
+ const facts=h("div",{class:"ap-software-facts"});
+ const fact=(label,value,ltr)=>h("div",{class:"ap-software-fact"},
+  h("small",{text:label}),h("strong",{class:ltr?"ltr":"" ,text:txt(value)}));
+ facts.append(
+  fact("مدل دستگاه",version.product||(!live?"MA5683T":null),false),
+  fact("نسخه نرم‌افزار",version.version,false),
+  fact("Patch",version.patch,true),
+  fact("مدت فعالیت",version.uptime,true)
+ );
+ software.append(facts);
+ const modules=h("div",{class:"ap-module-grid"});
+ const moduleEntries=[...boardList.entries()].filter(entry=>entry[1]?.model);
+ moduleEntries.forEach(([slot,b])=>{
+  const model=b.model||"";
+  const type=/GPBD/i.test(model)?"GPON":/SCUN/i.test(model)?"کنترل":/GICF/i.test(model)?"Uplink":"کارت";
+  const glyph=/GPBD/i.test(model)?"◉":/SCUN/i.test(model)?"▣":/GICF/i.test(model)?"⇄":"◇";
+  const state=b.status||"نامشخص";
+  const standby=/standby/i.test(state);
+  const healthy=/^(normal|active_normal|standby_normal)$/i.test(state);
+  const stateClass=healthy?(standby?"standby":""):"bad";
+  const stateLabel=/active/i.test(state)?"Active":standby?"Standby":state;
+  modules.append(h("article",{class:"ap-module-card"},
+   h("span",{class:"ap-module-icon",text:glyph}),
+   h("div",{class:"ap-module-copy"},
+    h("strong",{text:type+" · Slot "+slot}),
+    h("small",{text:model})),
+   h("span",{class:"ap-module-state "+stateClass,text:stateLabel})
+  ));
+ });
+ if(!moduleEntries.length)modules.append(h("div",{class:"dash-empty",text:live?"اطلاعات کارت‌ها از OLT دریافت نشده است.":"اطلاعات کارت‌ها در حالت پیش‌نمایش موجود نیست."}));
+ software.append(modules);
+ homeGrid.append(software);
+
+ /* نمودار ترافیک: فقط آخرین نمونه‌های واقعی CLI؛ بدون داده ساختگی */
+ const traffic=sec("ترافیک شبکه","⇅",h("button",{class:"btn small",type:"button",onclick:()=>setTab("traffic"),text:"مانیتورینگ زنده"}));
+ traffic.classList.add("ap-traffic-panel");
+ const iface=$("#trafficChartPort")?$("#trafficChartPort").value:"0/8/0";
+ const latest=trafficLatest[iface]||{};
+ const rates=h("div",{class:"ap-traffic-rates"});
+ rates.append(
+  h("div",{class:"ap-traffic-rate"},h("small",{text:"Upstream · "+iface}),h("strong",{text:rateLabel(latest.up_kbps)})),
+  h("div",{class:"ap-traffic-rate"},h("small",{text:"Downstream · "+iface}),h("strong",{text:rateLabel(latest.down_kbps)}))
+ );
+ traffic.append(rates);
+ const chartPreview=h("div",{class:"ap-traffic-preview"});
+ try{renderTrafficChart();chartPreview.innerHTML=$("#trafficChart").innerHTML;}
+ catch(e){chartPreview.append(h("div",{class:"dash-empty",text:"نمودار ترافیک هنوز آماده نیست."}));}
+ traffic.append(chartPreview);
+ traffic.append(h("p",{class:"ap-traffic-foot",text:latest.sampled_at?
+  "آخرین نمونه: "+new Date(latest.sampled_at*1000).toLocaleTimeString("fa-IR")+" · برای ادامه پایش وارد صفحه مانیتورینگ شوید.":
+  "برای دریافت نمودار، به مانیتورینگ زنده بروید و پایش Interfaceها را شروع کنید."}));
+ homeGrid.append(traffic);
+ target.append(homeGrid);
+
+ /* نمای شاسی قبلی بدون تغییر در منطق انتخاب کارت و پورت */
  target.append(physicalChassis(boards,live&&!!boards?.supported));
+
+ /* ظرفیت GPON و وضعیت Uplink / فن */
  const cols=h("div",{class:"dash-cols"});
  cols.append(monitoredPortsPanel());
- const res=sec("وضعیت منابع","▥","قرائت از OLT · مقادیر نامعلوم مخفی نمی‌شوند");
- const gauges=h("div",{class:"dash-metric-tiles"});
- gauges.append(machineMetric("CPU",cpu,"%",cpu,"پردازنده"),machineMetric("RAM",ram,"%",ram,"حافظه"),
-    machineMetric("دما",temp,"°C",temp==null?null:Math.min(100,temp),"دما"),
-    machineMetric("فن‌ها",fan?.label??null,"",fan?(fan.normal?100:0):null,fan?.caption||"وضعیت نامشخص؛ از EMU خوانده می‌شود"),
-    machineMetric("Uplink",links.length?`${links.filter(x=>x.link==="online").length} از ${links.length}`:null,"",links.length?links.filter(x=>x.link==="online").length/links.length*100:null,"GE آنلاین از پورت‌های شناسایی‌شده"));
- res.append(gauges);
+ const res=sec("وضعیت Uplink و فن","▥","وضعیت خوانده‌شده از CLI");
  if(links.length){
-  const nOnline=links.filter(x=>x.link==="online").length;
-  res.append(h("div",{class:"uplink-summary"},h("strong",{text:`${nOnline} پورت آنلاین از ${links.length} پورت GE`}),
-   h("span",{class:"muted",text:`${links.length-nOnline} پورت آفلاین (لزوماً خرابی نیست)`})));
+  res.append(h("div",{class:"uplink-summary"},
+   h("strong",{text:uplinkOnline+" پورت آنلاین از "+links.length+" پورت GE"}),
+   h("span",{class:"muted",text:(links.length-uplinkOnline)+" پورت آفلاین (لزوماً خرابی نیست)"})));
   const ports=h("div",{class:"uplink-status-grid"});
-  links.forEach(x=>ports.append(h("div",{class:"uplink-port-card "+(x.link==="online"?"online":""),title:"Active state: "+x.active},
+  links.forEach(x=>ports.append(h("div",{class:"uplink-port-card "+(x.link==="online"?"online":""),
+   title:"Active state: "+x.active},
    h("div",{class:"port-label",text:x.port}),
    h("div",{class:"link-label"},h("span",{class:"led "+(x.link==="online"?"ok":"bad")}),x.link==="online"?"Online":"Offline"),
    h("div",{class:"optic-note",text:"Optic: "+x.optic}))));
   res.append(ports);
- } else if(live){res.append(h("div",{class:"dash-empty",style:"margin-top:10px",text:"اطلاعات پورت‌های Uplink دریافت نشده یا قالب خروجی دستگاه قابل تشخیص نیست."}));}
- res.append(h("div",{class:"dash-empty",style:"margin-top:10px",text:fan?`وضعیت فن از display emu: ${fan.label} (EMU ID ${fan.id})`:"وضعیت فن هنوز از OLT خوانده نشده است؛ نمایش — به معنای سالم بودن فن‌ها نیست."}));
- res.append(h("div",{style:"margin-top:12px;text-align:left"},h("button",{class:"btn small",type:"button",onclick:()=>setTab("resource"),text:"جزئیات منابع و Uplink"})));
+ }else{
+  res.append(h("div",{class:"dash-empty",text:live?
+   "اطلاعات پورت‌های Uplink دریافت نشده یا قالب خروجی دستگاه قابل تشخیص نیست.":
+   "وضعیت Uplink پس از اتصال به OLT خوانده می‌شود."}));
+ }
+ res.append(h("div",{class:"ap-fan-status "+(fan?(fan.normal?"ok":"bad"):"unknown")},
+  h("span",{class:"led "+(fan?(fan.normal?"ok":"bad"):"warn")}),
+  fan?"وضعیت فن: "+fan.label+" · EMU "+fan.id:
+   "وضعیت فن نامشخص است؛ نبود داده به معنی سالم بودن فن نیست."
+ ));
+ res.append(h("div",{style:"margin-top:12px;text-align:left"},
+  h("button",{class:"btn small",type:"button",onclick:()=>setTab("resource"),text:"جزئیات منابع و Uplink"})));
  cols.append(res);target.append(cols);
+
+ /* پایش نوری و آلارم‌ها */
  const lower=h("div",{class:"dash-bottom"});
  const optic=sec("پایش نوری","☼",h("button",{class:"btn small",type:"button",onclick:()=>setTab("ports"),text:"جزئیات ONT"}));
  optic.append(h("div",{class:"optic-tiles"},
   h("div",{class:"optic-tile"},h("small",{text:"Rx میانگین"}),h("strong",{text:"—"})),
   h("div",{class:"optic-tile warn"},h("small",{text:"ضعیف‌ترین لینک"}),h("strong",{text:"—"})),
-  h("div",{class:"optic-tile green"},h("small",{text:"بهترین لینک"}),h("strong",{text:"—"}))));
+  h("div",{class:"optic-tile green"},h("small",{text:"بهترین لینک"}),h("strong",{text:"—"}))
+ ));
  optic.append(h("p",{class:"ops-note",text:"برای توان نوری واقعی از جزئیات هر ONT استفاده کنید؛ اسکن سراسری نوری در این نسخه فعال نیست."}));
  lower.append(optic);
  const warn=sec("آلارم‌ها و اقدامات","♧",h("button",{class:"btn small",type:"button",onclick:()=>setTab("alarms"),text:"مشاهده جزئیات"}));
- if(alarms===0){warn.append(h("div",{class:"alarm-preview"},h("span",{text:"هیچ آلارم فعالی طبق خروجی OLT گزارش نشده است."})));}
- else {warn.append(h("div",{class:"alarm-preview"},h("span",{},h("span",{class:"alarm-bubble",text:"!"}),
-  alarms==null?"تعداد آلارم‌ها قابل استخراج نیست؛ خروجی CLI را بررسی کنید.":`${alarms} آلارم فعال گزارش شده است.`),
-  h("span",{class:"right-meta",text:complete?"آخرین قرائت":"داده موجود نیست"})));}
- warn.append(h("div",{class:"alarm-preview"},h("span",{},h("span",{class:"alarm-bubble",text:"i"}),"بررسی تلاش‌های ناموفق Telnet در سوابق امنیتی"),
- h("span",{class:"right-meta",text:"توصیه امنیتی · غیرزنده"})));
- warn.append(h("div",{class:"alarm-preview"},h("span",{},h("span",{class:"alarm-bubble",text:"⌁"}),"مغایرت ONT و افت توان نوری از بخش پورت‌ها قابل بررسی است")));
+ if(alarms===0){
+  warn.append(h("div",{class:"alarm-preview"},h("span",{text:"هیچ آلارم فعالی طبق خروجی OLT گزارش نشده است."})));
+ }else{
+  warn.append(h("div",{class:"alarm-preview"},
+   h("span",{},h("span",{class:"alarm-bubble",text:"!"}),
+    alarms==null?"تعداد آلارم‌ها قابل استخراج نیست؛ خروجی CLI را بررسی کنید.":alarms+" آلارم فعال گزارش شده است."),
+   h("span",{class:"right-meta",text:complete?"آخرین قرائت":"داده موجود نیست"})));
+ }
+ warn.append(
+  h("div",{class:"alarm-preview"},h("span",{},
+   h("span",{class:"alarm-bubble",text:"i"}),"بررسی تلاش‌های ناموفق Telnet در سوابق امنیتی"),
+   h("span",{class:"right-meta",text:"توصیه امنیتی · غیرزنده"})),
+  h("div",{class:"alarm-preview"},h("span",{},
+   h("span",{class:"alarm-bubble",text:"⌁"}),"مغایرت ONT و افت توان نوری از بخش پورت‌ها قابل بررسی است"))
+ );
  lower.append(warn);target.append(lower);
+
+ /* اقدامات سریع قبلی */
  const quick=h("div",{class:"dash-quick"},h("div",{class:"dash-quick-title",text:"⚡ اقدامات سریع"}));
- [["ثبت ONT جدید","افزودن و پیکربندی","new","aqua"],["بررسی پورت","وضعیت مشترکین","ports","blue"],
- ["نمایش Inventory","کارت‌ها و نسخه","inventory","purple"],["گزارش آلارم‌ها","مشاهده خروجی CLI","alarms","orange"]].forEach(a=>{
- quick.append(h("button",{class:"quick-action "+a[3],type:"button",onclick:()=>setTab(a[2])},a[0],h("small",{text:a[1]})));
- });target.append(quick);
- const end=h("p",{class:"ops-note",text:(live?"داده‌های نمایش‌داده‌شده مربوط به آخرین بازخوانی هستند، نه جریان لحظه‌ای. ":"اطلاعات شاسی فوق نمونه تأییدشده از خروجی ارسالی شما هستند. ")+
-   `Software: ${txt(version.version)} · Patch: ${txt(version.patch)} · ${installed} کارت در نمای شاسی · Uptime: ${txt(version.uptime)}. در صورت عدم امکان تفسیر خروجی، «—» نمایش داده می‌شود.`});target.append(end);
+ [["ثبت ONT جدید","افزودن و پیکربندی","new","aqua"],
+  ["بررسی پورت","وضعیت مشترکین","ports","blue"],
+  ["نمایش Inventory","کارت‌ها و نسخه","inventory","purple"],
+  ["گزارش آلارم‌ها","مشاهده خروجی CLI","alarms","orange"]].forEach(a=>{
+  quick.append(h("button",{class:"quick-action "+a[3],type:"button",onclick:()=>setTab(a[2])},
+   a[0],h("small",{text:a[1]})));
+ });
+ target.append(quick);
+
+ const end=h("p",{class:"ops-note",text:
+  (live?"داده‌های نمایش‌داده‌شده مربوط به آخرین بازخوانی هستند، نه جریان لحظه‌ای. ":
+   "اطلاعات شاسی و نسخه فوق نمونه غیرزنده بر اساس خروجی‌های قبلی شما هستند. ")+
+  "Software: "+txt(version.version)+" · Patch: "+txt(version.patch)+" · "+
+  (boardKnown?installed+" کارت شناسایی‌شده":"تعداد کارت‌ها نامشخص")+
+  " · Uptime: "+txt(version.uptime)+". در صورت عدم امکان تفسیر خروجی، «—» نمایش داده می‌شود."
+ });
+ target.append(end);
+
  const last=$("#dashLastRead");
- if(complete){const at=Math.min(...["system","inventory","resource","uplinks","alarms"].map(k=>operatorCache[k].collected_at||0));last.textContent="آخرین دریافت: "+new Date(at*1000).toLocaleString("fa-IR");}
- else last.textContent=live?"در انتظار تکمیل داده‌ها":"نمونه آفلاین";
+ if(complete){
+  const at=Math.min(...["system","inventory","resource","uplinks","alarms"].map(k=>operatorCache[k].collected_at||0));
+  last.textContent="آخرین دریافت: "+new Date(at*1000).toLocaleString("fa-IR");
+ }else last.textContent=live?"در انتظار تکمیل داده‌ها":"نمونه آفلاین";
  $("#dashRefresh").disabled=!live;
 }
-
 
 
 /* ---------- Live Data Traffic monitoring ---------- */
