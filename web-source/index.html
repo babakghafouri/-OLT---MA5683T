@@ -192,7 +192,7 @@ pre.code{margin:0;background:#0C1820;color:#CFE3EE;border-radius:10px;padding:12
 .ma-chassis-header{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:15px}
 .ma-chassis-header strong{font-size:18px}.ma-frame{padding:15px;border-radius:13px;border:3px solid #536b78;background:var(--sunk);box-shadow:inset 0 1px 5px #0002}
 .ma-slots{display:grid;grid-template-columns:repeat(13,minmax(70px,1fr));gap:6px;overflow-x:auto;direction:ltr}
-.ma-slot{min-height:145px;padding:9px 5px;border:1px solid var(--line);border-radius:8px;background:var(--panel);display:flex;flex-direction:column;align-items:center;justify-content:space-between;text-align:center;min-width:68px}
+.ma-slot{cursor:default;font:inherit;color:inherit}.ma-slot.detected{cursor:pointer}.ma-slot.detected:hover{box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 28%,transparent)}.ma-open-hint{color:var(--accent);font-size:10px}.board-pon-grid{display:flex;flex-wrap:wrap;gap:8px}.ma-slot{min-height:145px;padding:9px 5px;border:1px solid var(--line);border-radius:8px;background:var(--panel);display:flex;flex-direction:column;align-items:center;justify-content:space-between;text-align:center;min-width:68px}
 .ma-slot .ma-code{font-size:11px;font-weight:700;overflow-wrap:anywhere}.ma-slot .ma-type{font-size:10px;color:var(--mute)}
 .ma-slot .ma-number{font:700 14px var(--mono)}.ma-slot.detected{border:2px solid var(--accent)}.ma-slot .ma-led{width:10px;height:10px;border-radius:50%;background:var(--mute)}
 .ma-slot.detected .ma-led{background:var(--ok)}.ma-slot.problem .ma-led{background:var(--bad)}
@@ -879,18 +879,48 @@ function ma5683Chassis(entry) {
   for(let i=0;i<13;i++) {
     const b=rows.get(i), installed=!!b?.model, known=!!b;
     const abnormal=installed && !/^(Normal|Active_normal|Standby_normal)$/i.test(b.status);
-    const el=h("div",{class:"ma-slot"+(installed?" detected":"")+(abnormal?" problem":""),
-      title:`Slot ${i}: ${installed?b.model+" / "+b.status:known?"بدون کارت در خروجی":"وضعیت نامشخص"}`},
+    const el=h(installed?"button":"div",{class:"ma-slot"+(installed?" detected":"")+(abnormal?" problem":""),
+      type:installed?"button":null,
+      title:`Slot ${i}: ${installed?b.model+" / "+b.status:known?"بدون کارت در خروجی":"وضعیت نامشخص"}`,
+      ...(installed?{onclick:()=>showBoardDetails(i,b)}:{})},
       h("div",{class:"ma-number",text:String(i)}),h("div",{class:"ma-led"}),
       h("div",{class:"ma-type",text:types[i]}),
       h("div",{class:"ma-code",text:installed?b.model:known?"خالی":"نامشخص"}),
-      h("small",{text:installed?b.status:""}));
+      h("small",{text:installed?b.status:""}),
+      installed?h("small",{class:"ma-open-hint",text:"مشاهده جزئیات"}):null);
     slots.append(el);
   }
   rack.append(slots);box.append(rack);
   box.append(h("p",{class:"ma-legend",text:"شماره اسلات‌ها و کارت‌ها مطابق display board 0 هستند. رنگ سبز یعنی کارت با وضعیت عادی گزارش شده؛ پورت‌ها و ظرفیت مشترکین از این جدول قابل تعیین نیستند. جایگاه‌های تغذیه در این خروجی گزارش نشده‌اند."}));
   if(!rows.size)box.append(operatorEmpty("اطلاعات شاسی هنوز خوانده نشده یا فرمت آن قابل تشخیص نیست."));
   return box;
+}
+
+async function showBoardDetails(slot, board) {
+  dialog(h("h3",{text:`جزئیات کارت اسلات ${slot}`}),
+    h("div",{class:"row",style:"align-items:center"},h("span",{class:"spin"}),"در حال دریافت اطلاعات زنده کارت و پورت‌ها از OLT…"));
+  try {
+    const data=await api(`/api/board/${slot}`);
+    const ports=h("div",{class:"board-pon-grid"});
+    if(data.ports.length) {
+      data.ports.forEach(fsp=>ports.append(h("button",{class:"btn small",type:"button",onclick:()=>{
+        dlg.close(); setTab("ports");
+        if(!S.ports.includes(fsp)){S.ports.push(fsp);store.set("olt.ports",S.ports);}
+        loadPort(fsp);
+      }},h("span",{class:"mono ltr",text:fsp})," · مشاهده ONTها")));
+    } else {
+      ports.append(operatorEmpty("شناسه پورت‌ها از خروجی CLI این کارت قابل استخراج نبود؛ هیچ پورتی به‌صورت حدسی ساخته نشده است."));
+    }
+    const raw=h("details",{class:"ops-raw"},h("summary",{text:"خروجی خام جزئیات کارت"}),h("pre",{class:"code",text:data.detail||"بدون خروجی"}));
+    const rawPorts=h("details",{class:"ops-raw"},h("summary",{text:"خروجی خام وضعیت پورت‌ها"}),h("pre",{class:"code",text:data.port_state||data.port_error||"بدون خروجی"}));
+    dialog(h("h3",{text:`اسلات ${slot} · ${data.board.board||board.model}`}),
+      h("div",{class:"row"},badge("وضعیت",data.board.status),badge("نوع کارت",data.board.board)),
+      h("h3",{text:"پورت‌های شناسایی‌شده"}),ports,
+      data.port_error?h("div",{class:"err",text:"خواندن وضعیت پورت‌ها: "+data.port_error}):null,
+      raw,rawPorts,h("div",{class:"actions"},closeBtn()));
+  } catch(e) {
+    dialog(h("h3",{text:"دریافت جزئیات کارت ناموفق بود"}),h("div",{class:"err",text:e.message}),h("div",{class:"actions"},closeBtn()));
+  }
 }
 
 function renderOperator(name) {
