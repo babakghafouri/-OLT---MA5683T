@@ -713,6 +713,105 @@ html[data-theme=dark] dialog{background:rgba(17,38,56,.97);color:#e7f4ff;border-
   .ont-detail-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 
+
+/* =========================================================
+   AAPANEL-INSPIRED OLT DASHBOARD SKIN
+   Visual-only layer: keeps the approved RTL navigation on the
+   right and preserves all existing OLT views, data and actions.
+   ========================================================= */
+:root{
+  --bg:#f2f5f9;
+  --panel:#ffffff;
+  --sunk:#f6f8fb;
+  --ink:#24364b;
+  --mute:#8190a2;
+  --line:#e7edf3;
+  --accent:#12a6a0;
+  --ok:#20a64b;
+  --bad:#e34b5b;
+  --warn:#e6a33a;
+  --shadow:0 3px 14px rgba(30,55,85,.055);
+}
+body{background:var(--bg);color:var(--ink);font-family:inherit}
+.nav-side{
+  width:214px;background:#fff;color:#33465c;
+  border-left:1px solid #e8edf3;box-shadow:0 2px 14px rgba(30,55,85,.05)
+}
+.nav-user{border-bottom:1px solid #edf1f5}
+.nav-user strong{color:#263b52}
+.nav-user small,.nav-bottom small{color:#8a9aab}
+.user-avatar{background:#e9f6f5;color:#079b94}
+.nav-side .tabs{padding:14px 9px;gap:4px}
+.nav-side .tab{
+  color:#52657a;min-height:40px;border:0!important;border-right:3px solid transparent!important;
+  border-radius:7px;background:transparent;font-size:12px;padding:0 12px
+}
+.nav-side .tab:hover{background:#f3f7fa;color:#263b52}
+.nav-side .tab[aria-selected=true]{
+  color:#fff;background:#18a34a;border-right-color:#18a34a!important;
+  box-shadow:none
+}
+.nav-side .tab[aria-selected=true] .nav-ico{color:#fff}
+.nav-ico{color:#708398;font-size:19px}
+.nav-bottom{color:#60748a;border-top:1px solid #edf1f5}
+.tiny-led{background:#22ad60}
+.bar{
+  margin-right:214px;min-height:64px;padding:8px 22px;
+  background:#fff;border-bottom:1px solid #e9eef4;box-shadow:0 1px 8px rgba(30,55,85,.035)
+}
+.brand{font-size:15px}.brand-mark{width:36px;height:36px;line-height:36px;font-size:20px}
+.header-title strong{font-size:16px}.header-title small{font-size:10px}
+.header-tools{gap:7px}.connection-indicator{background:#edf8f2;color:#178653}
+main{margin-right:214px;padding:22px 22px 52px}
+.dash-heading{margin-bottom:14px}
+.dash-heading h1{font-size:18px;color:#263b52}
+.dash-heading p{font-size:11px}
+.dash-kpis{grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:13px}
+.dash-kpi{
+  background:#fff;border:1px solid #edf1f5;border-radius:9px;
+  box-shadow:0 2px 9px rgba(30,55,85,.045);min-height:92px;padding:13px 12px
+}
+.dash-kpi .kico{width:40px;height:40px;background:#eef6fb;color:#2c9dc1}
+.dash-kpi.green .kico{background:#edf8f1;color:#1ca45a}
+.dash-kpi.red .kico{background:#fff0f1;color:#e24c60}
+.dash-kpi.orange .kico{background:#fff7e9;color:#d99b28}
+.dash-kpi .kname{font-size:10px;color:#8493a4}
+.dash-kpi .knum{font-size:21px;color:#253b53}
+.dash-kpi .kfoot{font-size:9px}
+.dash-section,.ma-chassis,.traffic-card,.traffic-toolbar,.traffic-kpi,.traffic-port-card,
+.ont-detail-metric,.ont-detail-card,.ops-panel,.ops-kpi{
+  background:#fff;border:1px solid #e9eef4;border-radius:10px;box-shadow:var(--shadow)
+}
+.dash-section{padding:15px;margin-bottom:12px}
+.dash-section-title{font-size:13px;color:#2d435a}
+.dash-section-head{margin-bottom:11px}
+.dash-cols,.dash-bottom{gap:12px;margin-bottom:12px}
+.dash-cols .dash-section,.dash-bottom .dash-section{margin-bottom:0}
+.dash-gauge{background:#f7f9fc;border:1px solid #edf1f5;border-radius:8px}
+.dash-gauge .dial{width:64px;height:64px}
+.ma-chassis{padding:15px;margin-bottom:12px}
+.ma-chassis-header strong{font-size:15px}
+.ma-frame{border-radius:9px}
+.dash-quick{background:#fff;border:1px solid #e9eef4;box-shadow:var(--shadow);border-radius:10px}
+.quick-action{border-radius:7px}
+.dash-notice{border-radius:8px}
+.btn{border-radius:7px}
+input,select,textarea{border-radius:7px}
+.traffic-card,.traffic-toolbar{border-radius:10px}
+.traffic-card{padding:15px}
+.traffic-kpi{border-radius:9px}
+.ont-detail-hero{border-radius:10px}
+@media(max-width:1470px){.dash-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:1120px){
+  .nav-side{width:190px}.bar,main{margin-right:190px}
+}
+@media(max-width:730px){
+  .nav-side{width:auto}
+  .bar{margin-right:0}
+  main{margin-right:0}
+  .dash-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
 </style>
 </head>
 <body>
