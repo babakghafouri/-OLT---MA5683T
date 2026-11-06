@@ -1,0 +1,5 @@
+[
+  {"name": "اینترنت (VLAN 200)", "vlan": 200, "gemport": 3, "default": true},
+  {"name": "مدیریت (VLAN 100)", "vlan": 100, "gemport": 0, "default": false},
+  {"name": "سرویس VLAN 151", "vlan": 151, "gemport": 2, "default": false}
+]
