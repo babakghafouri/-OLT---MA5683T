@@ -41,3 +41,15 @@ def parse_chassis_inventory(raw):
         elif re.match(r"^\s*\d{1,2}\s+", line):
             unparsed.append(line)
     return {"slots": slots, "recognized": recognized, "unparsed": unparsed}
+
+def parse_board_ports(raw, slot):
+    """Extract only explicit F/S/P port identifiers for a specific frame/slot."""
+    if not isinstance(raw, str):
+        return []
+    prefix = f"0/{int(slot)}/"
+    found = set()
+    for match in re.finditer(r"(?<![\\d/])0/(\\d{1,2})/(\\d{1,2})(?![\\d/])", raw):
+        if int(match.group(1)) == int(slot):
+            found.add(prefix + match.group(2))
+    return sorted(found, key=lambda value: int(value.rsplit("/", 1)[1]))
+
