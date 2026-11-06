@@ -32,9 +32,11 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           import re
-          html = Path("web-source/index.html").read_text(encoding="utf-8")
-          scripts = re.findall(r"<script>(.*?)</script>", html, re.S)
-          assert scripts, "No inline script found"
-          Path("/tmp/app.js").write_text("\n".join(scripts), encoding="utf-8")
+          for name in ("index.html", "management.html"):
+              html = Path("web-source", name).read_text(encoding="utf-8")
+              scripts = re.findall(r"<script>(.*?)</script>", html, re.S)
+              assert scripts, f"No inline script found in {name}"
+              Path("/tmp/" + name + ".js").write_text("\n".join(scripts), encoding="utf-8")
           PY
-          node --check /tmp/app.js
+          node --check /tmp/index.html.js
+          node --check /tmp/management.html.js
