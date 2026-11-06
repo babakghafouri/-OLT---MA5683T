@@ -926,7 +926,7 @@ const store = {
 
 /* ---------- تم ---------- */
 function applyTheme(t) { if (t) document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme; }
-applyTheme(store.get("olt.theme", null));
+applyTheme(store.get("olt.theme", "light"));
 $("#theme").onclick = () => {
   const dark = document.documentElement.dataset.theme === "dark" ||
     (!document.documentElement.dataset.theme && matchMedia("(prefers-color-scheme:dark)").matches);
