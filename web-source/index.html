@@ -913,11 +913,12 @@ async function showBoardDetails(slot, board) {
     }
     const raw=h("details",{class:"ops-raw"},h("summary",{text:"خروجی خام جزئیات کارت"}),h("pre",{class:"code",text:data.detail||"بدون خروجی"}));
     const rawPorts=h("details",{class:"ops-raw"},h("summary",{text:"خروجی خام وضعیت پورت‌ها"}),h("pre",{class:"code",text:data.port_state||data.port_error||"بدون خروجی"}));
+    const rawPortInfo=h("details",{class:"ops-raw"},h("summary",{text:"خروجی خام اطلاعات تک‌تک پورت‌ها"}),h("pre",{class:"code",text:(data.port_info||[]).map(x=>"Port "+x.port_id+"\\n"+x.raw).join("\\n\\n")||"بدون خروجی"}));
     dialog(h("h3",{text:`اسلات ${slot} · ${data.board.board||board.model}`}),
       h("div",{class:"row"},badge("وضعیت",data.board.status),badge("نوع کارت",data.board.board)),
       h("h3",{text:"پورت‌های شناسایی‌شده"}),ports,
       data.port_error?h("div",{class:"err",text:"خواندن وضعیت پورت‌ها: "+data.port_error}):null,
-      raw,rawPorts,h("div",{class:"actions"},closeBtn()));
+      raw,rawPorts,rawPortInfo,h("div",{class:"actions"},closeBtn()));
   } catch(e) {
     dialog(h("h3",{text:"دریافت جزئیات کارت ناموفق بود"}),h("div",{class:"err",text:e.message}),h("div",{class:"actions"},closeBtn()));
   }
