@@ -9,6 +9,12 @@ SLOT_COUNT = 13
 BOARD_LINE = re.compile(r"^\s*(\d{1,2})\s+(H\d{3}[A-Z0-9-]+)\s+(\S+)", re.I)
 EMPTY_WORDS = {"empty", "absent", "none", "offline", "not-installed"}
 
+# Explicitly documented GPON board models and their port-ID ranges.
+GPON_PORT_COUNTS = {"H807GPBD": 8}
+
+def gpon_port_count(board_model):
+    return GPON_PORT_COUNTS.get(str(board_model or "").upper())
+
 def parse_chassis_inventory(raw):
     """Parse 'display board 0' into a conservative slot map.
 
