@@ -1037,6 +1037,13 @@ function physicalChassis(boards,live) {
  const panel=sec("نمای فیزیکی شاسی و کارت‌ها","▦",live?"از خروجی زنده display board 0":"نمونه شاسی ارسالی · غیرزنده");
  const frame=h("div",{class:"dash-chassis"}),rack=h("div",{class:"dash-slots"});
  const entries=parseMA5683TBoards(boards);
+ const detail=h("div",{class:"ops-note",style:"margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:10px",text:"برای مشاهده جزئیات، یک اسلات را انتخاب کنید."});
+ function selectSlot(i,b,known){
+   const label=b?.model|| (known?"خالی":"نامشخص");
+   const state=b?.status|| (known?"کارت نصب نشده":"اطلاعاتی از دستگاه دریافت نشده");
+   detail.textContent="اسلات "+i+" | "+label+" | وضعیت: "+state+" | "+(live?"داده دستگاه":"نمونه غیرزنده")+". اطلاعات پورت‌ها و ONTها باید جداگانه از OLT خوانده شوند.";
+   rack.querySelectorAll(".dash-slot").forEach((node,n)=>{node.style.outline=n===i?"2px solid var(--accent)":"";node.setAttribute("aria-pressed",String(n===i));});
+ }
  for(let i=0;i<=12;i++){
   const b=entries.get(i),model=b?.model||"",state=b?.status||"",installed=!!model,known=entries.has(i);
   const typ=model.includes("GPBD")?"GPON":model.includes("SCUN")?"Control":model.includes("GICF")?"Uplink":"";
@@ -1049,9 +1056,12 @@ function physicalChassis(boards,live) {
      installed?h("div",{class:"slot-connectors "+(typ==="GPON"?"":typ==="Control"?"control":"uplink")},
         Array.from({length:typ==="GPON"?8:4},()=>h("i"))):h("div",{class:"slot-blank",text:"◇"}),
      h("div",{class:"slot-kind",text:typ|| (known?"Empty Slot":"Unknown")}));
+  card.setAttribute("role","button");card.setAttribute("tabindex","0");card.setAttribute("aria-label","جزئیات اسلات "+i);
+  card.onclick=()=>selectSlot(i,b,known);
+  card.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();selectSlot(i,b,known);}};
   rack.append(card);
  }
- frame.append(rack);panel.append(frame);
+ frame.append(rack);panel.append(frame,detail);
  panel.append(h("div",{class:"chassis-legend"},
   h("span",{},h("i")," کارت عادی / Active"),h("span",{},h("i",{class:"standby-dot"})," آماده‌به‌کار"),
   h("span",{},h("i",{class:"unknown-dot"})," اسلات بدون کارت / نامشخص")));
