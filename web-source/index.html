@@ -882,7 +882,7 @@ function renderOntDetail(fsp, ont, v) {
     ontMetric("مصرف CPU ONT",d.cpu_occupation),
     ontMetric("دمای ONT",d.temperature_c,"°C"));
   const timingWarning=timingValid?null:h("div",{class:"ont-detail-warning",text:
-    "هشدار اعتبار زمان: OLT مقدار Last Up را با تاریخ 2000-01-01 گزارش کرده و مدت اتصال 9807 روز با آن هم‌خوانیِ یک شمارنده Epoch را دارد. این دو مقدار به‌عنوان سابقه واقعی اتصال نمایش داده نمی‌شوند. مقدار خام برای عیب‌یابی در خروجی CLI حفظ شده است."});
+    "هشدار اعتبار زمان: "+(d.connection_timing_note||"زمان اتصال از خروجی فعلی قابل تأیید نیست.")+" مقدار خام برای عیب‌یابی در خروجی CLI حفظ شده است."});
   const identity=ontPropertiesCard("مشخصات و پروفایل مشترک",[
     {label:"مدل / شرح ثبت‌شده در OLT",value:d.model||d.description},
     {label:"Description",value:d.description},
