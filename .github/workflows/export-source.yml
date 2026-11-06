@@ -26,11 +26,11 @@ jobs:
           unzip -q OLT-MA5683T-EMU-Fan-Fixed.zip -d /tmp/olt-src
           PATCH_FILE="$(mktemp)"
           base64 -d traffic-live.patch.gz.b64 | gzip -d > "$PATCH_FILE"
-          git apply --check --directory=/tmp/olt-src "$PATCH_FILE" || {
+          (cd /tmp && git apply --check --directory=olt-src "$PATCH_FILE") || {
             echo "Patch check failed against packaged source"
             exit 1
           }
-          git apply --directory=/tmp/olt-src "$PATCH_FILE"
+          (cd /tmp && git apply --directory=olt-src "$PATCH_FILE")
           SRC="/tmp/olt-src/OLT-MA5683T-Operator-Dashboard"
           test -f "$SRC/app.py"
           test -f "$SRC/index.html"
