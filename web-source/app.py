@@ -339,7 +339,7 @@ def on_error(e):
 def guard():
     if not UI_PASSWORD:
         return None
-    if request.path in ("/", "/api/login"):
+    if request.path in ("/", "/management", "/api/login"):
         return None
     if not session.get("auth"):
         return jsonify(error="auth"), 401
@@ -476,6 +476,12 @@ def index():
     return (BASE / "index.html").read_text("utf-8")
 
 
+@app.get("/management")
+def management_dashboard():
+    """Serve the isolated management console; protected APIs still require login."""
+    return (BASE / "management.html").read_text("utf-8")
+
+
 @app.post("/api/login")
 def api_login():
     pw = str((request.get_json(force=True) or {}).get("password", ""))
@@ -527,6 +533,71 @@ def api_add_device():
     return jsonify(ok=True, device=public_device(item))
 
 
+@app.put("/api/devices/<device_id>")
+def api_update_device(device_id):
+    d = request.get_json(force=True) or {}
+    items = load_devices()
+    item = next((x for x in items if x.get("id") == device_id), None)
+    if item is None:
+        return jsonify(error="دستگاه پیدا نشد"), 404
+    if MANAGER.get(device_id) is not None:
+        return jsonify(error="برای ویرایش مشخصات، ابتدا نشست این OLT را قطع کنید"), 409
+
+    name = str(d.get("name", item.get("name", ""))).strip()
+    host = str(d.get("host", item.get("host", ""))).strip()
+    proto = str(d.get("proto", item.get("proto", "ssh"))).lower()
+    try:
+        port = int(d.get("port") or (22 if proto == "ssh" else 23))
+    except (TypeError, ValueError):
+        raise ValueError("پورت نامعتبر است")
+    if not name:
+        raise ValueError("نام دستگاه الزامی است")
+    if not HOST_RE.match(host):
+        raise ValueError("آدرس OLT نامعتبر است")
+    if proto not in ("ssh", "telnet"):
+        raise ValueError("پروتکل نامعتبر است")
+    if not 1 <= port <= 65535:
+        raise ValueError("پورت نامعتبر است")
+
+    mode = d.get("credential_mode", item.get("credential_mode", "session"))
+    if mode not in ("session", "encrypted"):
+        raise ValueError("حالت نگهداری رمز نامعتبر است")
+    if mode == "encrypted":
+        key = os.environ.get("OLT_CREDENTIALS_KEY", "")
+        if not key:
+            raise ValueError("برای ذخیره رمز، OLT_CREDENTIALS_KEY را در محیط سرویس تنظیم کنید")
+        username = str(d.get("user") or item.get("username") or "").strip()
+        password = str(d.get("password", ""))
+        if password:
+            from cryptography.fernet import Fernet
+            item["password_enc"] = Fernet(key.encode()).encrypt(password.encode()).decode()
+        elif not item.get("password_enc"):
+            raise ValueError("برای فعال‌کردن ذخیره رمزنگاری‌شده، رمز عبور الزامی است")
+        if not username:
+            raise ValueError("نام کاربری برای ذخیره رمزنگاری‌شده الزامی است")
+        item["username"] = username
+    else:
+        item.pop("password_enc", None)
+        item.pop("username", None)
+
+    item.update({
+        "name": name, "host": host, "port": port, "proto": proto,
+        "credential_mode": mode, "notes": str(d.get("notes", item.get("notes", "")))[:500]
+    })
+    save_devices(items)
+    return jsonify(ok=True, device=public_device(item))
+
+
+@app.post("/api/devices/<device_id>/disconnect")
+def api_disconnect_device(device_id):
+    if not any(x.get("id") == device_id for x in load_devices()):
+        return jsonify(error="دستگاه پیدا نشد"), 404
+    MANAGER.remove(device_id)
+    if session.get("active_olt_id") == device_id:
+        session.pop("active_olt_id", None)
+    return jsonify(ok=True)
+
+
 @app.delete("/api/devices/<device_id>")
 def api_delete_device(device_id):
     items = load_devices()
@@ -547,6 +618,19 @@ def api_status():
     return jsonify(connected=conn is not None,
                    **({"host": conn.host, "proto": conn.proto, "prompt": conn.prompt, "device_id": device_id} if conn else {}),
                    devices=[public_device(x) for x in load_devices()])
+
+
+@app.post("/api/select-device")
+def api_select_device():
+    d = request.get_json(force=True) or {}
+    device_id = str(d.get("device_id", "")).strip()
+    if not device_id or not any(x.get("id") == device_id for x in load_devices()):
+        return jsonify(error="دستگاه ذخیره‌شده پیدا نشد"), 404
+    conn = MANAGER.get(device_id)
+    if conn is None:
+        return jsonify(error="برای این OLT نشست فعالی وجود ندارد؛ ابتدا اتصال را برقرار کنید"), 409
+    session["active_olt_id"] = device_id
+    return jsonify(ok=True, device_id=device_id, host=conn.host, proto=conn.proto)
 
 
 @app.get("/api/services")
